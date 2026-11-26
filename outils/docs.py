@@ -183,7 +183,7 @@ def _avec_bloc(texte: str, nouveau: str) -> str:
 
 def _modele(m: Module) -> str:
     rubriques = "".join(f"{r}\n\n{A_COMPLETER}\n\n" for r in RUBRIQUES)
-    return f"# {m.nom}\n\n{rubriques}## Dépendances (automatique)\n\n"
+    return f"# {m.nom}\n\n{rubriques}"
 
 
 def regenerer(racine: Path) -> list[Path]:

@@ -98,6 +98,7 @@ class TestVerifier(unittest.TestCase):
             docs.regenerer(racine)
             texte = (racine / "docs/modules/config.md").read_text(encoding="utf-8")
             self.assertIn(docs.A_COMPLETER, texte)
+            self.assertEqual(texte.count("## Dépendances (automatique)"), 1)
             self.assertTrue(any("à compléter" in p for p in docs.verifier(racine)))
 
     def test_fins_de_ligne_windows_tolerees(self):

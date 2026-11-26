@@ -175,3 +175,7 @@ Les dossiers `entrees` et `sorties` sont exclus de Git par `.gitignore`. Seuls l
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+## Comprendre le programme
+
+La documentation de chaque module (rôle, fichiers lus et écrits, dépendances, ce qui casse si on le change) est dans [docs/](docs/README.md). Elle est tenue à jour à chaque modification : un contrôle GitHub le vérifie.
