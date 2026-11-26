@@ -60,6 +60,16 @@ class TestGrandLivre(unittest.TestCase):
         self.assertEqual(gl[2]["source"], "gl.pdf p.2")
         self.assertEqual(gl[0]["partenaire"], "")
 
+    def test_texte_partenaire_separe_par_tiret(self):
+        s = section("grand_livre", ["Grand livre 2024", "1020 Banque",
+                                    "05.01.2024 BILL/2024/01/0001 - Fournisseur SA - Loyer janvier 0.00 1'200.00",
+                                    "06.01.2024 Client SA - Acompte 500.00 0.00",
+                                    "07.01.2024 BNK1/2024/0003 Frais bancaires 0.00 12.50"])
+        gl = extracteurs.extraire(s, 2024, "gl.pdf")["grandlivre"]
+        self.assertEqual([(l["piece"], l["partenaire"], l["libelle"]) for l in gl],
+                         [("BILL/2024/01/0001", "Fournisseur SA", "Loyer janvier"),
+                          ("", "Client SA", "Acompte"), ("BNK1/2024/0003", "", "Frais bancaires")])
+
     def test_excel_odoo_compte_combine_et_montant_signe(self):
         df = pd.DataFrame({
             "Compte": ["1020 Banque", None, "6000 Loyers"],

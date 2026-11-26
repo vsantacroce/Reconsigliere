@@ -201,11 +201,17 @@ def _gl_texte(page: Page, exercice: int, src: str, etat: dict) -> list[dict]:
         if mots and re.fullmatch(r"\d{3,8}", mots[0]) and len(mots) > 1:
             compte, nom = mots.pop(0), ""
         piece = mots.pop(0) if mots and RE_PIECE.match(mots[0]) else ""
+        while mots and mots[0] in ("-", "–"):
+            mots.pop(0)
+        texte = " ".join(mots)
+        # Odoo écrit souvent « Partenaire - libellé » : on ne sépare que sur ce tiret, sans deviner.
+        partenaire, _, libelle = texte.partition(" - ") if " - " in texte else ("", "", texte)
         if len(montants) >= 2:
             debit, credit = montants[0], montants[1]
         else:
             debit, credit = (montants[0], None) if montants[0] >= 0 else (None, -montants[0])
-        res.append(_ligne_gl(compte, nom, date, piece, "", " ".join(mots), debit, credit, exercice, src))
+        res.append(_ligne_gl(compte, nom, date, piece, partenaire.strip(), libelle.strip(), debit, credit,
+                             exercice, src))
     return res
 
 
