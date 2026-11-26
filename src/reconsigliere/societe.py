@@ -411,6 +411,8 @@ def charger(aujourd_hui: date | None = None) -> Etat:
     for chemin in sorted(dossier.rglob("*.xls[xm]")):
         if chemin.name.startswith("~$"):
             continue
+        if {"exercices", "imports"} & {p.lower() for p in chemin.relative_to(dossier).parts[:-1]}:
+            continue  # référentiels versionnés et fichiers du pipeline d'import : lus par exercices.py
         try:
             wb = openpyxl.load_workbook(chemin, data_only=True, read_only=True)
         except Exception as e:  # noqa: BLE001 - un fichier illisible ne doit pas tout arrêter

@@ -39,6 +39,12 @@ DOSSIERS = [
      "Patent owner, puis pour les coûts : Brevet, Classification (Capitalisable/Charge), Montant HT CHF, Date facture.\n\n"
      "Le classeur societe.xlsx est créé au premier lancement : tiens-y les onglets Projets, Revenus et Journal.\n"
      "L'onglet Société de la fenêtre et la page sorties/societe.html montrent l'état de la société.\n"),
+    ("entrees/06_societe/imports", None,
+     "Fichiers normalisés par exercice, un sous-dossier par année (imports/2024, imports/2025…).\n"
+     "Chaque classeur peut contenir les onglets PlanComptable (code, nom, type) et GrandLivre\n"
+     "(date, compte, libelle_compte, piece, partenaire, libelle, debit, credit).\n"
+     "« Construire depuis les fichiers » et « Suggestions depuis les fichiers » les lisent.\n\n"
+     "Le dossier exercices, à côté, contient les référentiels versionnés : ne le modifie pas à la main.\n"),
     ("sorties", "Résultats",
      "Recréé à chaque lancement : reconciliation.xlsx, reconciliation.html, pdf_renommes et a_comptabiliser.\n"
      "societe.html est recréé par le bouton « Tableau de bord » de l'onglet Société.\n"),
