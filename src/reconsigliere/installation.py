@@ -33,11 +33,16 @@ DOSSIERS = [
      "- Feuille partenaires : un mot du libellé bancaire et le nom de partenaire à utiliser.\n"
      "- Feuille transactions : pour un id de transaction, le partenaire, le PDF à lier, une explication ou un statut forcé.\n\n"
      "Tes corrections passent toujours avant le rapprochement automatique.\n"),
+    ("entrees/07_documents", "Documents à importer",
+     "Dépose ici les documents comptables à transformer en tableaux : bilan, compte de résultat,\n"
+     "grand livre, plan comptable, annexe, en PDF, photo ou Excel. Un même PDF peut tout contenir.\n"
+     "Le bouton « Importer les documents » les classe page par page et écrit un classeur par document\n"
+     "dans entrees/06_societe/imports/AAAA (AAAA = exercice) et une page lisible dans sorties/imports.\n"),
     ("sorties", "Résultats",
      "Recréé à chaque lancement : reconciliation.xlsx, reconciliation.html, pdf_renommes et a_comptabiliser.\n"),
 ]
 
-EXTENSIONS_UTILES = {".pdf", ".png", ".jpg", ".jpeg", ".xlsx", ".xlsm", ".xls", ".csv"}
+EXTENSIONS_UTILES = {".pdf", ".png", ".jpg", ".jpeg", ".tif", ".tiff", ".xlsx", ".xlsm", ".xls", ".csv"}
 
 
 # ---------------------------------------------------------------- dossier de travail
@@ -86,20 +91,30 @@ def _fichier_reglages() -> Path:
     return base / NOM_PAR_DEFAUT / "reglages.json"
 
 
-def dossier_memorise() -> Path | None:
+def lire_reglages() -> dict:
     try:
         donnees = json.loads(_fichier_reglages().read_text(encoding="utf-8"))
-        chemin = Path(donnees.get("dossier_travail", ""))
-        return chemin if str(chemin) not in ("", ".") else None
+        return donnees if isinstance(donnees, dict) else {}
     except (OSError, ValueError):
-        return None
+        return {}
+
+
+def ecrire_reglage(cle: str, valeur) -> None:
+    """Change un réglage sans effacer les autres (dossier, clé API, modèle IA…)."""
+    donnees = lire_reglages()
+    donnees[cle] = valeur
+    fichier = _fichier_reglages()
+    fichier.parent.mkdir(parents=True, exist_ok=True)
+    fichier.write_text(json.dumps(donnees, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def dossier_memorise() -> Path | None:
+    chemin = Path(lire_reglages().get("dossier_travail", "") or "")
+    return chemin if str(chemin) not in ("", ".") else None
 
 
 def memoriser(racine: Path) -> None:
-    fichier = _fichier_reglages()
-    fichier.parent.mkdir(parents=True, exist_ok=True)
-    fichier.write_text(json.dumps({"dossier_travail": str(racine)}, ensure_ascii=False, indent=2),
-                       encoding="utf-8")
+    ecrire_reglage("dossier_travail", str(racine))
 
 
 def dossier_propose() -> Path:
