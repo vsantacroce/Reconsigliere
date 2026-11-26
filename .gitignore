@@ -1,0 +1,21 @@
+# Données personnelles et bancaires : jamais sur GitHub
+entrees/**
+!entrees/**/
+!entrees/**/LISEZMOI.md
+sorties/**
+!sorties/LISEZMOI.md
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Fichiers temporaires Excel
+~$*
+
+# Copie clonee par erreur dans le projet
+/Reconsigliere/
+
+# Marqueur d installation de Reconsigliere.bat
+.installe
