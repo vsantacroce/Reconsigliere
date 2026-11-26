@@ -1,5 +1,15 @@
 # Changements
 
+## 0.4.0 — état de la société
+
+- Nouvel onglet « Société » dans la fenêtre : familles de brevets actives, dépôts par pays, coûts capitalisables et en charge, projets capitalisables, sources de revenus, points d'attention.
+- Nouveau dossier `entrees/06_societe` : Reconsigliere lit le classeur des brevets tel qu'il est tenu (onglet de la liste et onglets de coûts par année), sans ressaisie.
+- `societe.xlsx` créé au premier lancement avec les onglets Projets, Revenus et Journal ; bouton « Ajouter au journal… ».
+- Page `sorties/societe.html` : tableau de bord complet (brevets par famille, coûts par année, projets, revenus, journal).
+- Ligne de commande : `python -m reconsigliere.societe`.
+- 7 tests ajoutés (`tests/test_societe.py`), sur des données fictives.
+- La fenêtre passe à 920 × 880 pour loger les onglets. La réconciliation n'a pas changé.
+
 ## 0.3.0 — installé une fois, mis à jour tout seul
 
 - `installer.ps1` : installation Windows en une commande PowerShell, sans droits administrateur. Installe Python 3.12 si besoin (winget, sinon python.org), télécharge le programme dans `%LOCALAPPDATA%\Reconsigliere`, installe les bibliothèques dans un environnement isolé, crée les icônes du bureau et du menu Démarrer.

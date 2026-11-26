@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reconsigliere · Société</title>
+<style>
+  :root { --fond:#f6f7f9; --carte:#fff; --texte:#1d2430; --doux:#667085; --ligne:#e4e7ec;
+          --vert:#1f8a4c; --bleu:#2563eb; --orange:#c2410c; --jaune:#a16207; --gris:#6b7280; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fond:#111418; --carte:#1a1f26; --texte:#e6e9ee; --doux:#9aa4b2; --ligne:#2b323c; } }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; background:var(--fond); color:var(--texte); }
+  .page { max-width:1200px; margin:auto; padding:20px 16px 48px; }
+  h1 { margin:0 0 4px; font-size:22px; }
+  h2 { font-size:16px; margin:28px 0 10px; }
+  .doux { color:var(--doux); }
+  .tuiles { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin:16px 0; }
+  .tuile { background:var(--carte); border:1px solid var(--ligne); border-radius:10px; padding:12px 14px; }
+  .tuile b { font-size:24px; display:block; font-variant-numeric:tabular-nums; }
+  .tuile span { color:var(--doux); font-size:12px; }
+  .defile { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; background:var(--carte); border:1px solid var(--ligne); border-radius:10px; overflow:hidden; }
+  th, td { padding:8px 10px; border-bottom:1px solid var(--ligne); text-align:left; vertical-align:top; }
+  th { font-size:12px; text-transform:uppercase; letter-spacing:.03em; color:var(--doux); white-space:nowrap; }
+  td.n, th.n { text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  tr.total td { font-weight:600; }
+  .pastille { display:inline-block; padding:2px 8px; border-radius:99px; font-size:12px; color:#fff; white-space:nowrap; }
+  .petit { font-size:12px; color:var(--doux); }
+  ul.attention { background:var(--carte); border:1px solid var(--ligne); border-left:4px solid var(--orange); border-radius:10px; padding:12px 12px 12px 32px; margin:0; }
+  ul.attention li { margin:4px 0; }
+  .vide { color:var(--doux); font-style:italic; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>État de la société</h1>
+  <div class="doux" id="sous-titre"></div>
+  <div class="tuiles" id="tuiles"></div>
+
+  <h2>Points d'attention</h2>
+  <div id="attention"></div>
+
+  <h2>Brevets par famille</h2>
+  <div class="defile"><table>
+    <thead><tr><th>Famille</th><th>Titre</th><th>Statut</th><th>Dépôts</th><th>Titulaire</th>
+      <th class="n">Capitalisable</th><th class="n">Charge</th></tr></thead>
+    <tbody id="familles"></tbody>
+  </table></div>
+
+  <h2>Coûts des brevets par année</h2>
+  <div class="defile"><table>
+    <thead><tr><th>Année</th><th class="n">Capitalisable</th><th class="n">Charge</th><th class="n">Cumul capitalisé</th></tr></thead>
+    <tbody id="annees"></tbody>
+  </table></div>
+
+  <h2>Projets</h2>
+  <div class="defile" id="projets"></div>
+
+  <h2>Sources de revenus</h2>
+  <div class="defile" id="revenus"></div>
+
+  <h2>Journal</h2>
+  <div class="defile" id="journal"></div>
+</div>
+<script>
+const D = __DONNEES__;
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const chf = n => (n < 0 ? "−" : "") + Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, "'");
+const jour = iso => iso ? iso.split("-").reverse().join(".") : "";
+const COUL = {"Active":"var(--vert)","Délivrée (au moins un pays)":"var(--bleu)","Abandonnée":"var(--gris)",
+  "À répartir":"var(--jaune)","En cours":"var(--vert)","Délivré":"var(--bleu)","Abandonné":"var(--gris)",
+  "Abandon prévu":"var(--orange)","Entrée annoncée":"var(--jaune)"};
+const pastille = s => `<span class="pastille" style="background:${COUL[s]||"var(--gris)"}">${esc(s)}</span>`;
+const C = D.compteurs;
+
+document.getElementById("sous-titre").textContent =
+  `Au ${jour(D.date)} · lu dans : ${D.fichiers.length ? D.fichiers.join(", ") : "aucun fichier"}`;
+
+const tuiles = [
+  [C.familles_actives, `familles de brevets actives sur ${C.familles}`],
+  [C.depots_actifs, `dépôts actifs, plus ${C.entrees_annoncees} entrées annoncées`],
+  [C.projets_capitalisables, `projets capitalisables sur ${C.projets}`],
+  [C.revenus_actifs, `sources de revenus actives`],
+  [chf(C.capitalisable), `${D.devise} de coûts brevets capitalisables`],
+  [chf(C.charge), `${D.devise} de coûts brevets en charge`],
+];
+if (C.revenus_annuels) tuiles.push([chf(C.revenus_annuels), `${D.devise} de revenus annuels actifs`]);
+document.getElementById("tuiles").innerHTML =
+  tuiles.map(([v, t]) => `<div class="tuile"><b>${esc(v)}</b><span>${esc(t)}</span></div>`).join("");
+
+document.getElementById("attention").innerHTML = D.attention.length
+  ? `<ul class="attention">${D.attention.map(p => `<li>${esc(p)}</li>`).join("")}</ul>`
+  : `<p class="vide">Aucun point d'attention.</p>`;
+
+document.getElementById("familles").innerHTML = D.familles.map(f => {
+  const depots = f.depots.map(d =>
+    `<div>${esc(d.pays || "?")} · ${esc(d.numero)} ${pastille(d.statut)}` +
+    (d.depot ? ` <span class="petit">déposé le ${jour(d.depot)}</span>` : "") +
+    (d.abandon ? ` <span class="petit">· abandon le ${jour(d.abandon)}</span>` : "") + `</div>`).join("");
+  const annuites = (f.dernieres_annuites || []).map(a =>
+    `<div class="petit">Dernière annuité${a.pays ? " " + esc(a.pays) : ""} : ${jour(a.date)}, ${esc(a.description)} (${chf(a.montant)})</div>`).join("");
+  return `<tr><td><b>${esc(f.famille)}</b></td><td>${esc(f.titre)}${f.notes.map(n => `<div class="petit">${esc(n)}</div>`).join("")}</td>
+    <td>${pastille(f.statut)}</td><td>${depots || '<span class="vide">aucun</span>'}${annuites}</td>
+    <td class="petit">${esc(f.titulaire).replace(/\n/g, "<br>")}</td>
+    <td class="n">${chf(f.capitalisable)}</td><td class="n">${chf(f.charge)}</td></tr>`;
+}).join("") + `<tr class="total"><td colspan="5">Total</td><td class="n">${chf(C.capitalisable)}</td><td class="n">${chf(C.charge)}</td></tr>`;
+
+document.getElementById("annees").innerHTML = D.annees.length ? D.annees.map(a =>
+  `<tr><td>${a.annee}</td><td class="n">${chf(a.capitalisable)}</td><td class="n">${chf(a.charge)}</td><td class="n">${chf(a.cumul_capitalisable)}</td></tr>`).join("")
+  : `<tr><td colspan="4" class="vide">Aucun coût de brevet lu.</td></tr>`;
+
+function tableau(id, lignes, colonnes, vide) {
+  document.getElementById(id).innerHTML = lignes.length
+    ? `<table><thead><tr>${colonnes.map(([t, , n]) => `<th${n ? ' class="n"' : ""}>${t}</th>`).join("")}</tr></thead><tbody>` +
+      lignes.map(l => `<tr>${colonnes.map(([, f, n]) => `<td${n ? ' class="n"' : ""}>${f(l)}</td>`).join("")}</tr>`).join("") +
+      `</tbody></table>`
+    : `<p class="vide">${vide}</p>`;
+}
+tableau("projets", D.projets, [
+  ["Projet", p => `<b>${esc(p.nom)}</b>`], ["Capitalisable", p => p.capitalisable ? "oui" : "non"],
+  ["Brevets liés", p => esc(p.brevets)], ["Statut", p => esc(p.statut)],
+  ["Montant activé", p => p.montant ? chf(p.montant) : "", true], ["Notes", p => `<span class="petit">${esc(p.notes)}</span>`]],
+  "Aucun projet : remplis l'onglet Projets de societe.xlsx.");
+tableau("revenus", D.revenus, [
+  ["Source", r => `<b>${esc(r.source)}</b>`], ["Client", r => esc(r.client)], ["Type", r => esc(r.type)],
+  ["Contrat", r => esc(r.contrat)], ["Statut", r => esc(r.statut)], ["Fin", r => jour(r.fin)],
+  ["Montant annuel", r => r.montant ? chf(r.montant) : "", true], ["Compte", r => esc(r.compte)]],
+  "Aucune source de revenus : remplis l'onglet Revenus de societe.xlsx.");
+tableau("journal", D.journal.slice(0, 50), [
+  ["Date", e => jour(e.date)], ["Catégorie", e => esc(e.categorie)], ["Événement", e => esc(e.evenement)],
+  ["Lien", e => esc(e.lien)], ["Montant", e => e.montant != null ? chf(e.montant) : "", true]],
+  "Journal vide : utilise « Ajouter au journal » dans la fenêtre.");
+</script>
+</body>
+</html>

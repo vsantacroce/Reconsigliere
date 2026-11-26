@@ -15,7 +15,9 @@ import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
-from . import __version__, config, installation
+from datetime import date
+
+from . import __version__, config, installation, societe
 
 TITRE = "Reconsigliere"
 NB_ETAPES = 5
@@ -28,10 +30,10 @@ class Fenetre:
         self.messages: queue.Queue = queue.Queue()
         self.en_cours = False
 
-        racine_tk.title(f"{TITRE} — réconciliation bancaire")
+        racine_tk.title(f"{TITRE} — réconciliation et état de la société")
         self._icone()
-        racine_tk.minsize(820, 720)
-        racine_tk.geometry("900x800")
+        racine_tk.minsize(820, 760)
+        racine_tk.geometry("920x880")
         self._style()
         self._construire()
 
@@ -84,8 +86,19 @@ class Fenetre:
         ttk.Label(principal, style="Doux.TLabel",
                   text="Le consigliere de ta compta : il rapproche tes transactions, tes factures et ta comptabilité.").pack(anchor="w", pady=(0, 12))
 
+        self.onglets = ttk.Notebook(principal)
+        self.onglets.pack(fill="both", expand=True)
+        onglet_reco = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
+        onglet_societe = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
+        self.onglets.add(onglet_reco, text="  Réconciliation  ")
+        self.onglets.add(onglet_societe, text="  Société  ")
+        self.onglets.bind("<<NotebookTabChanged>>", lambda _e: self._actualiser_societe()
+                          if self.onglets.index("current") == 1 else None)
+        self._construire_societe(onglet_societe)
+        principal_reco = onglet_reco
+
         # 1. Dossier de travail
-        s1 = self._section(principal, "1. Dossier de travail")
+        s1 = self._section(principal_reco, "1. Dossier de travail")
         self.lbl_dossier = ttk.Label(s1, text="Aucun dossier choisi", style="Chemin.TLabel",
                                      wraplength=480)
         self.lbl_dossier.grid(row=0, column=0, sticky="w")
@@ -100,12 +113,12 @@ class Fenetre:
         s1.columnconfigure(0, weight=1)
 
         # 2. Fichiers à déposer
-        s2 = self._section(principal, "2. Dépose tes fichiers dans ces dossiers")
+        s2 = self._section(principal_reco, "2. Dépose tes fichiers dans ces dossiers")
         self.compteurs: dict[str, ttk.Label] = {}
         self.boutons_dossiers: list[ttk.Button] = []
         ligne = 0
         for rel, titre, _ in installation.DOSSIERS:
-            if titre is None or not rel.startswith("entrees"):
+            if titre is None or not rel.startswith("entrees") or rel == societe.NOM_DOSSIER:
                 continue
             ttk.Label(s2, text=titre).grid(row=ligne, column=0, sticky="w", pady=2)
             ttk.Label(s2, text=rel.replace("/", " › "), style="Doux.TLabel").grid(row=ligne, column=1, sticky="w", padx=12)
@@ -120,7 +133,7 @@ class Fenetre:
         s2.columnconfigure(1, weight=1)
 
         # 3. Lancer
-        s3 = self._section(principal, "3. Lancer", extensible=True)
+        s3 = self._section(principal_reco, "3. Lancer", extensible=True)
         haut = ttk.Frame(s3)
         haut.pack(fill="x")
         self.btn_lancer = ttk.Button(haut, text="▶  Lancer la réconciliation", style="Grand.TButton",
@@ -136,7 +149,7 @@ class Fenetre:
 
         journal_cadre = ttk.Frame(s3)
         journal_cadre.pack(fill="both", expand=True, pady=(10, 0))
-        self.journal = tk.Text(journal_cadre, height=6, wrap="word", relief="flat",
+        self.journal = tk.Text(journal_cadre, height=4, wrap="word", relief="flat",
                                font=("Consolas", 9) if sys.platform.startswith("win") else ("Monospace", 9),
                                background="#f6f7f9", state="disabled")
         barre = ttk.Scrollbar(journal_cadre, command=self.journal.yview)
@@ -146,7 +159,7 @@ class Fenetre:
         self.journal.tag_configure("erreur", foreground="#c2410c")
 
         # 4. Résultats
-        s4 = self._section(principal, "4. Résultats")
+        s4 = self._section(principal_reco, "4. Résultats")
         self.lbl_resume = ttk.Label(s4, text="Aucun résultat pour l'instant.", style="Doux.TLabel", wraplength=700)
         self.lbl_resume.pack(anchor="w", pady=(0, 8))
         boutons4 = ttk.Frame(s4)
@@ -167,7 +180,112 @@ class Fenetre:
         commit = os.environ.get("RECONSIGLIERE_COMMIT", "")
         version = f"Version {__version__}" + (f" ({commit}, mise à jour automatique)" if commit else "")
         ttk.Label(principal, text=f"{version} · tes fichiers restent sur cet ordinateur.",
-                  style="Doux.TLabel").pack(anchor="e")
+                  style="Doux.TLabel").pack(anchor="e", pady=(6, 0))
+
+    def _construire_societe(self, parent) -> None:
+        haut = self._section(parent, "Chiffres clés")
+        self.tuiles: dict[str, ttk.Label] = {}
+        intitules = [
+            ("familles", "Familles de brevets actives"),
+            ("depots", "Dépôts actifs"),
+            ("projets", "Projets capitalisables"),
+            ("revenus", "Sources de revenus actives"),
+            ("capitalisable", "Coûts brevets capitalisables (CHF)"),
+            ("charge", "Coûts brevets en charge (CHF)"),
+        ]
+        for i, (cle, texte) in enumerate(intitules):
+            cadre = ttk.Frame(haut, padding=(0, 0, 18, 6))
+            cadre.grid(row=i // 3, column=i % 3, sticky="w")
+            valeur = ttk.Label(cadre, text="—", style="Titre.TLabel")
+            valeur.pack(anchor="w")
+            ttk.Label(cadre, text=texte, style="Doux.TLabel").pack(anchor="w")
+            self.tuiles[cle] = valeur
+        for c in range(3):
+            haut.columnconfigure(c, weight=1)
+
+        milieu = self._section(parent, "Brevets par famille", extensible=True)
+        colonnes = ("famille", "titre", "statut", "pays", "capitalisable", "charge")
+        self.arbre = ttk.Treeview(milieu, columns=colonnes, show="headings", height=6)
+        for col, texte, largeur, ancre in [
+                ("famille", "Famille", 130, "w"), ("titre", "Titre", 300, "w"), ("statut", "Statut", 150, "w"),
+                ("pays", "Pays", 90, "w"), ("capitalisable", "Capitalisable", 100, "e"), ("charge", "Charge", 90, "e")]:
+            self.arbre.heading(col, text=texte)
+            self.arbre.column(col, width=largeur, anchor=ancre, stretch=(col == "titre"))
+        self.arbre.pack(fill="both", expand=True)
+        self.lbl_attention = ttk.Label(milieu, text="", wraplength=760, justify="left", foreground="#c2410c")
+        self.lbl_attention.pack(anchor="w", pady=(8, 0))
+
+        bas = self._section(parent, "Tenir la société à jour")
+        self.lbl_societe = ttk.Label(bas, style="Doux.TLabel", wraplength=760, justify="left", text="")
+        self.lbl_societe.pack(anchor="w", pady=(0, 8))
+        boutons = ttk.Frame(bas)
+        boutons.pack(anchor="w")
+        self.boutons_societe = [
+            ttk.Button(boutons, text="Ajouter au journal…", command=self._ajouter_journal),
+            ttk.Button(boutons, text="Tableau de bord (page)", command=self._ouvrir_tableau_de_bord),
+            ttk.Button(boutons, text="Projets, revenus, journal (Excel)",
+                       command=lambda: self._ouvrir(societe.fichier_classeur() if self.dossier else None)),
+            ttk.Button(boutons, text="Dossier société",
+                       command=lambda: self._ouvrir(societe.dossier_societe() if self.dossier else None)),
+        ]
+        for b in self.boutons_societe:
+            b.pack(side="left", padx=(0, 6))
+
+    # ------------------------------------------------------------ société
+
+    def _actualiser_societe(self) -> dict | None:
+        if self.dossier is None:
+            return None
+        try:
+            societe.creer_modele_si_absent()
+            donnees = societe.synthese(societe.charger())
+        except Exception as e:  # noqa: BLE001 - l'erreur doit apparaître dans la fenêtre
+            self.lbl_attention.configure(text=f"Lecture impossible : {e}")
+            return None
+        c = donnees["compteurs"]
+        self.tuiles["familles"].configure(text=f"{c['familles_actives']} / {c['familles']}")
+        self.tuiles["depots"].configure(text=f"{c['depots_actifs']} (+{c['entrees_annoncees']})")
+        self.tuiles["projets"].configure(text=f"{c['projets_capitalisables']} / {c['projets']}")
+        self.tuiles["revenus"].configure(text=str(c["revenus_actifs"]))
+        self.tuiles["capitalisable"].configure(text=societe.format_chf(c["capitalisable"]))
+        self.tuiles["charge"].configure(text=societe.format_chf(c["charge"]))
+        self.arbre.delete(*self.arbre.get_children())
+        for f in donnees["familles"]:
+            self.arbre.insert("", "end", values=(
+                f["famille"], f["titre"], f["statut"], ", ".join(f["pays"]),
+                societe.format_chf(f["capitalisable"]), societe.format_chf(f["charge"])))
+        self.lbl_attention.configure(
+            text="\n".join(f"• {p}" for p in donnees["attention"]) if donnees["attention"] else "")
+        fichiers = ", ".join(donnees["fichiers"]) or "aucun"
+        self.lbl_societe.configure(
+            text=f"Fichiers lus dans entrees › 06_societe : {fichiers}. Dépose-y ton classeur des brevets ; "
+                 "tiens les projets, les revenus et le journal dans societe.xlsx.")
+        return donnees
+
+    def _ouvrir_tableau_de_bord(self) -> None:
+        if self.dossier is None:
+            return
+        try:
+            donnees, chemin = societe.actualiser()
+        except PermissionError as e:
+            messagebox.showerror(TITRE, f"Fichier ouvert dans un autre programme :\n{e.filename or e}", parent=self.tk)
+            return
+        self._ouvrir(chemin)
+
+    def _ajouter_journal(self) -> None:
+        if self.dossier is None:
+            return
+        Journal(self.tk, on_valider=self._enregistrer_journal)
+
+    def _enregistrer_journal(self, quand: date, categorie: str, evenement: str, lien: str,
+                             montant: float | None) -> bool:
+        try:
+            societe.ajouter_au_journal(quand, categorie, evenement, lien, montant)
+        except PermissionError:
+            messagebox.showerror(TITRE, "societe.xlsx est ouvert dans Excel.\nFerme-le puis réessaie.", parent=self.tk)
+            return False
+        self._actualiser_societe()
+        return True
 
     # ------------------------------------------------------------ dossier de travail
 
@@ -228,6 +346,10 @@ class Fenetre:
         for cle, (_, chemin) in self.boutons_resultats.items():
             existe = pret and chemin(self.dossier).exists()
             self.widgets_resultats[cle].state(["!disabled" if existe else "disabled"])
+        for b in self.boutons_societe:
+            b.state(["!disabled" if pret else "disabled"])
+        if pret and self.onglets.index("current") == 1:
+            self._actualiser_societe()
         self._actualiser_compteurs()
 
     def _actualiser_compteurs(self) -> None:
@@ -320,6 +442,55 @@ class Fenetre:
         self.lbl_resume.configure(
             text=f"{total} transaction(s). {details}. PDF sans transaction : {resultat.get('orphelins', 0)}.")
         self._actualiser()
+
+
+class Journal(tk.Toplevel):
+    """Petite fenêtre pour ajouter un événement au journal de la société."""
+
+    def __init__(self, parent: tk.Tk, on_valider) -> None:
+        super().__init__(parent)
+        self.title("Ajouter au journal")
+        self.transient(parent)
+        self.resizable(False, False)
+        self.on_valider = on_valider
+        cadre = ttk.Frame(self, padding=14)
+        cadre.pack(fill="both", expand=True)
+        self.v_date = tk.StringVar(value=date.today().strftime("%d.%m.%Y"))
+        self.v_categorie = tk.StringVar(value=societe.CATEGORIES_JOURNAL[0])
+        self.v_evenement = tk.StringVar()
+        self.v_lien = tk.StringVar()
+        self.v_montant = tk.StringVar()
+        champs = [
+            ("Date (JJ.MM.AAAA)", ttk.Entry(cadre, textvariable=self.v_date, width=14)),
+            ("Catégorie", ttk.Combobox(cadre, textvariable=self.v_categorie, values=societe.CATEGORIES_JOURNAL, width=18)),
+            ("Événement", ttk.Entry(cadre, textvariable=self.v_evenement, width=50)),
+            ("Lien (brevet, projet, client…)", ttk.Entry(cadre, textvariable=self.v_lien, width=30)),
+            ("Montant CHF (facultatif)", ttk.Entry(cadre, textvariable=self.v_montant, width=14)),
+        ]
+        for i, (texte, champ) in enumerate(champs):
+            ttk.Label(cadre, text=texte).grid(row=i, column=0, sticky="w", pady=3, padx=(0, 10))
+            champ.grid(row=i, column=1, sticky="w", pady=3)
+        boutons = ttk.Frame(cadre)
+        boutons.grid(row=len(champs), column=0, columnspan=2, sticky="e", pady=(10, 0))
+        ttk.Button(boutons, text="Annuler", command=self.destroy).pack(side="right")
+        ttk.Button(boutons, text="Enregistrer", command=self._valider).pack(side="right", padx=(0, 6))
+        champs[2][1].focus_set()
+        self.bind("<Return>", lambda _e: self._valider())
+        self.bind("<Escape>", lambda _e: self.destroy())
+
+    def _valider(self) -> None:
+        quand = societe._date(self.v_date.get())
+        if quand is None:
+            messagebox.showwarning(TITRE, "Date invalide : écris-la sous la forme 26.11.2026.", parent=self)
+            return
+        evenement = self.v_evenement.get().strip()
+        if not evenement:
+            messagebox.showwarning(TITRE, "Décris l'événement.", parent=self)
+            return
+        montant_texte = self.v_montant.get().strip()
+        montant = societe._montant(montant_texte) if montant_texte else None
+        if self.on_valider(quand, self.v_categorie.get().strip(), evenement, self.v_lien.get().strip(), montant):
+            self.destroy()
 
 
 def _nettete_windows() -> None:
