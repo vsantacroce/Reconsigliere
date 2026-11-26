@@ -10,7 +10,7 @@
 ## Global Constraints
 - Aucune dépendance Python nouvelle ; tests `python -m unittest discover -s tests`, données fictives uniquement.
 - Types : `bilan`, `compte_resultat`, `grand_livre`, `plan_comptable`, `annexe`, `autre`.
-- Modèle IA par défaut `claude-haiku-5-5`, extrait ≤ 2000 caractères, `max_tokens` 5.
+- Modèle IA réglable : `haiku` → `claude-haiku-5-5` (défaut), `sonnet` → `claude-sonnet-5-5` ; réglage `modele_ia` ou variable `RECONSIGLIERE_MODELE`. Extrait ≤ 2000 caractères, `max_tokens` 5.
 - Sorties : `entrees/06_societe/imports/AAAA/<nom>.xlsx`, `sorties/imports/<nom>.html` ; jamais `exercices/`.
 - Colonnes et règles de format : section « Format de sortie » de la spec.
 
@@ -44,8 +44,8 @@
 - [ ] Implémenter ; commit.
 
 ### Task 5: IA en secours (`importation/ia.py`)
-**Produces:** `cle_api() -> str|None` ; `classer_par_ia(texte:str, cle:str, envoyer=None) -> str` (envoyer injectable pour test).
-- [ ] Tests : extrait tronqué à 2000 car. dans la requête, modèle `claude-haiku-5-5` ; réponse « Grand livre » → grand_livre ; réponse inconnue → autre ; erreur réseau → None.
+**Produces:** `cle_api() -> str|None` ; `modele() -> str` ; `classer_par_ia(texte:str, cle:str, modele:str, envoyer=None) -> tuple[str|None, dict]` (type, usage tokens ; envoyer injectable) ; `banc.py` : `comparer(modeles, cle, envoyer=None) -> list[dict]` sur 12 pages ambiguës fictives (justesse, tokens entrée/sortie par modèle), lancé par `python -m reconsigliere banc-ia`.
+- [ ] Tests : extrait tronqué à 2000 car. dans la requête, modèle `claude-haiku-5-5` ; réponse « Grand livre » → grand_livre ; réponse inconnue → autre ; erreur réseau → None ; `banc.comparer` avec envoyer simulé → justesse 100 % et tokens additionnés.
 - [ ] Implémenter (urllib, en-têtes `x-api-key`, `anthropic-version: 2023-06-01`) ; commit.
 
 ### Task 6: Pipeline, contrôles et sorties (`importation/pipeline.py`, `importation/sorties.py`)
