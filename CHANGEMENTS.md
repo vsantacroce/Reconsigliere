@@ -1,6 +1,6 @@
 # Changements
 
-## 0.5.0 — import de documents comptables
+## 0.6.0 — import de documents comptables
 
 - Nouveau dossier `entrees/07_documents` et bouton « Importer les documents » : bilan, compte de résultat,
   grand livre, plan comptable, annexe, en PDF, photo ou Excel, plusieurs états dans un même document.
@@ -11,6 +11,26 @@
 - `python -m reconsigliere importer` et `python -m reconsigliere banc-ia` (comparaison Haiku / Sonnet).
 - Les dates AAAA-MM-JJ ne sont plus lues avec le jour et le mois inversés.
 - Les réglages (dossier, clé API, modèle) sont conservés ensemble.
+
+## 0.5.0 — exercices validés et verrouillés
+
+- Deux parties dans la fenêtre : « Réconciliation » et « Assistant société » (sous-onglets État de la société, Exercices et changements).
+- Nouveau module `exercices.py` : un référentiel par exercice (plan comptable, partenaires et compte habituel, brevets, projets, revenus) dans `entrees/06_societe/exercices/AAAA`.
+- Construire depuis les fichiers (`imports/AAAA` au format du pipeline d'import, classeur des brevets au 31.12, `societe.xlsx`), valider et verrouiller (lecture seule + empreinte SHA-256), ouverture automatique de l'exercice suivant, réouverture avec motif obligatoire.
+- Demandes de changement datées et motivées (ajout, modification, retrait), gardées dans l'onglet Changements ; écarts avec l'exercice précédent ; suggestions depuis les fichiers déposés, applicables ligne par ligne.
+- Détection d'un référentiel validé modifié à la main.
+- Réconciliation : colonne « Compte proposé » selon le référentiel de l'exercice de chaque transaction (par partenaire, sinon par le libellé).
+- 9 tests ajoutés (`tests/test_exercices.py`), sur des données fictives.
+
+## 0.4.0 — état de la société
+
+- Nouvel onglet « Société » dans la fenêtre : familles de brevets actives, dépôts par pays, coûts capitalisables et en charge, projets capitalisables, sources de revenus, points d'attention.
+- Nouveau dossier `entrees/06_societe` : Reconsigliere lit le classeur des brevets tel qu'il est tenu (onglet de la liste et onglets de coûts par année), sans ressaisie.
+- `societe.xlsx` créé au premier lancement avec les onglets Projets, Revenus et Journal ; bouton « Ajouter au journal… ».
+- Page `sorties/societe.html` : tableau de bord complet (brevets par famille, coûts par année, projets, revenus, journal).
+- Ligne de commande : `python -m reconsigliere.societe`.
+- 7 tests ajoutés (`tests/test_societe.py`), sur des données fictives.
+- La fenêtre passe à 920 × 880 pour loger les onglets. La réconciliation n'a pas changé.
 
 ## 0.3.0 — installé une fois, mis à jour tout seul
 

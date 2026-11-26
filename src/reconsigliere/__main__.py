@@ -13,7 +13,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Callable
 
-from . import chargement, config, corrections, installation, pdf_extraction, rapprochement, sorties
+from . import chargement, config, corrections, exercices, installation, pdf_extraction, rapprochement, sorties
 
 
 def main(log: Callable[[str], None] = print) -> dict:
@@ -48,6 +48,12 @@ def main(log: Callable[[str], None] = print) -> dict:
     log("4/5 Rapprochement…")
     rapprochement.reconcilier(transactions, pdfs, compta, pdfs_compta, corr)
     orphelins = rapprochement.pdfs_non_lies(pdfs, transactions)
+    try:
+        n_comptes = exercices.proposer_comptes(transactions)
+        if n_comptes:
+            log(f"    Compte proposé pour {n_comptes} transaction(s), selon le référentiel de leur exercice")
+    except Exception as e:  # noqa: BLE001 - la proposition de compte ne doit jamais bloquer la réconciliation
+        log(f"    Comptes non proposés : {e}")
 
     log("5/5 Écriture des sorties…")
     sorties.copier_pdfs(transactions)

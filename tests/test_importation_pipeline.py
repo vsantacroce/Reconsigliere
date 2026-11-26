@@ -102,6 +102,18 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(len(premiers), 1)
         self.assertEqual(seconds, [])
 
+    def test_lu_par_l_assistant_societe(self):
+        from reconsigliere import config, exercices
+        ancienne = config.RACINE
+        config.definir_racine(self.racine)
+        try:
+            self.importer()
+            plan, grand_livre = exercices.lire_imports(2024)
+        finally:
+            config.definir_racine(ancienne)
+        self.assertEqual(len(grand_livre), 4)
+        self.assertEqual({l["compte"] for l in grand_livre}, {"1020", "6000", "1100", "3200"})
+
 
 if __name__ == "__main__":
     unittest.main()

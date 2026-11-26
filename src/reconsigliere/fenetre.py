@@ -13,9 +13,11 @@ import threading
 import traceback
 import tkinter as tk
 from pathlib import Path
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox, simpledialog, ttk
 
-from . import __version__, config, installation
+from datetime import date
+
+from . import __version__, config, exercices, installation, societe
 
 TITRE = "Reconsigliere"
 NB_ETAPES = 5
@@ -28,10 +30,10 @@ class Fenetre:
         self.messages: queue.Queue = queue.Queue()
         self.en_cours = False
 
-        racine_tk.title(f"{TITRE} — réconciliation bancaire")
+        racine_tk.title(f"{TITRE} — réconciliation et état de la société")
         self._icone()
-        racine_tk.minsize(820, 720)
-        racine_tk.geometry("900x800")
+        racine_tk.minsize(820, 760)
+        racine_tk.geometry("920x880")
         self._style()
         self._construire()
 
@@ -84,8 +86,27 @@ class Fenetre:
         ttk.Label(principal, style="Doux.TLabel",
                   text="Le consigliere de ta compta : il rapproche tes transactions, tes factures et ta comptabilité.").pack(anchor="w", pady=(0, 12))
 
+        self.onglets = ttk.Notebook(principal)
+        self.onglets.pack(fill="both", expand=True)
+        onglet_reco = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
+        onglet_assistant = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
+        self.onglets.add(onglet_reco, text="  Réconciliation  ")
+        self.onglets.add(onglet_assistant, text="  Assistant société  ")
+        self.onglets.bind("<<NotebookTabChanged>>", lambda _e: self._actualiser_assistant()
+                          if self.onglets.index("current") == 1 else None)
+        self.sous_onglets = ttk.Notebook(onglet_assistant)
+        self.sous_onglets.pack(fill="both", expand=True)
+        onglet_societe = ttk.Frame(self.sous_onglets, padding=(0, 10, 0, 0))
+        onglet_exercices = ttk.Frame(self.sous_onglets, padding=(0, 10, 0, 0))
+        self.sous_onglets.add(onglet_societe, text=" État de la société ")
+        self.sous_onglets.add(onglet_exercices, text=" Exercices et changements ")
+        self.sous_onglets.bind("<<NotebookTabChanged>>", lambda _e: self._actualiser_assistant())
+        self._construire_societe(onglet_societe)
+        self._construire_exercices(onglet_exercices)
+        principal_reco = onglet_reco
+
         # 1. Dossier de travail
-        s1 = self._section(principal, "1. Dossier de travail")
+        s1 = self._section(principal_reco, "1. Dossier de travail")
         self.lbl_dossier = ttk.Label(s1, text="Aucun dossier choisi", style="Chemin.TLabel",
                                      wraplength=480)
         self.lbl_dossier.grid(row=0, column=0, sticky="w")
@@ -100,12 +121,12 @@ class Fenetre:
         s1.columnconfigure(0, weight=1)
 
         # 2. Fichiers à déposer
-        s2 = self._section(principal, "2. Dépose tes fichiers dans ces dossiers")
+        s2 = self._section(principal_reco, "2. Dépose tes fichiers dans ces dossiers")
         self.compteurs: dict[str, ttk.Label] = {}
         self.boutons_dossiers: list[ttk.Button] = []
         ligne = 0
         for rel, titre, _ in installation.DOSSIERS:
-            if titre is None or not rel.startswith("entrees"):
+            if titre is None or not rel.startswith("entrees") or rel == societe.NOM_DOSSIER:
                 continue
             ttk.Label(s2, text=titre).grid(row=ligne, column=0, sticky="w", pady=2)
             ttk.Label(s2, text=rel.replace("/", " › "), style="Doux.TLabel").grid(row=ligne, column=1, sticky="w", padx=12)
@@ -120,7 +141,7 @@ class Fenetre:
         s2.columnconfigure(1, weight=1)
 
         # 3. Lancer
-        s3 = self._section(principal, "3. Lancer", extensible=True)
+        s3 = self._section(principal_reco, "3. Lancer", extensible=True)
         haut = ttk.Frame(s3)
         haut.pack(fill="x")
         self.btn_lancer = ttk.Button(haut, text="▶  Lancer la réconciliation", style="Grand.TButton",
@@ -142,7 +163,7 @@ class Fenetre:
 
         journal_cadre = ttk.Frame(s3)
         journal_cadre.pack(fill="both", expand=True, pady=(10, 0))
-        self.journal = tk.Text(journal_cadre, height=6, wrap="word", relief="flat",
+        self.journal = tk.Text(journal_cadre, height=4, wrap="word", relief="flat",
                                font=("Consolas", 9) if sys.platform.startswith("win") else ("Monospace", 9),
                                background="#f6f7f9", state="disabled")
         barre = ttk.Scrollbar(journal_cadre, command=self.journal.yview)
@@ -152,7 +173,7 @@ class Fenetre:
         self.journal.tag_configure("erreur", foreground="#c2410c")
 
         # 4. Résultats
-        s4 = self._section(principal, "4. Résultats")
+        s4 = self._section(principal_reco, "4. Résultats")
         self.lbl_resume = ttk.Label(s4, text="Aucun résultat pour l'instant.", style="Doux.TLabel", wraplength=700)
         self.lbl_resume.pack(anchor="w", pady=(0, 8))
         boutons4 = ttk.Frame(s4)
@@ -175,7 +196,343 @@ class Fenetre:
         commit = os.environ.get("RECONSIGLIERE_COMMIT", "")
         version = f"Version {__version__}" + (f" ({commit}, mise à jour automatique)" if commit else "")
         ttk.Label(principal, text=f"{version} · tes fichiers restent sur cet ordinateur.",
-                  style="Doux.TLabel").pack(anchor="e")
+                  style="Doux.TLabel").pack(anchor="e", pady=(6, 0))
+
+    def _construire_societe(self, parent) -> None:
+        haut = self._section(parent, "Chiffres clés")
+        self.tuiles: dict[str, ttk.Label] = {}
+        intitules = [
+            ("familles", "Familles de brevets actives"),
+            ("depots", "Dépôts actifs"),
+            ("projets", "Projets capitalisables"),
+            ("revenus", "Sources de revenus actives"),
+            ("capitalisable", "Coûts brevets capitalisables (CHF)"),
+            ("charge", "Coûts brevets en charge (CHF)"),
+        ]
+        for i, (cle, texte) in enumerate(intitules):
+            cadre = ttk.Frame(haut, padding=(0, 0, 18, 6))
+            cadre.grid(row=i // 3, column=i % 3, sticky="w")
+            valeur = ttk.Label(cadre, text="—", style="Titre.TLabel")
+            valeur.pack(anchor="w")
+            ttk.Label(cadre, text=texte, style="Doux.TLabel").pack(anchor="w")
+            self.tuiles[cle] = valeur
+        for c in range(3):
+            haut.columnconfigure(c, weight=1)
+
+        milieu = self._section(parent, "Brevets par famille", extensible=True)
+        colonnes = ("famille", "titre", "statut", "pays", "capitalisable", "charge")
+        self.arbre = ttk.Treeview(milieu, columns=colonnes, show="headings", height=6)
+        for col, texte, largeur, ancre in [
+                ("famille", "Famille", 130, "w"), ("titre", "Titre", 300, "w"), ("statut", "Statut", 150, "w"),
+                ("pays", "Pays", 90, "w"), ("capitalisable", "Capitalisable", 100, "e"), ("charge", "Charge", 90, "e")]:
+            self.arbre.heading(col, text=texte)
+            self.arbre.column(col, width=largeur, anchor=ancre, stretch=(col == "titre"))
+        self.arbre.pack(fill="both", expand=True)
+        self.lbl_attention = ttk.Label(milieu, text="", wraplength=760, justify="left", foreground="#c2410c")
+        self.lbl_attention.pack(anchor="w", pady=(8, 0))
+
+        bas = self._section(parent, "Tenir la société à jour")
+        self.lbl_societe = ttk.Label(bas, style="Doux.TLabel", wraplength=760, justify="left", text="")
+        self.lbl_societe.pack(anchor="w", pady=(0, 8))
+        boutons = ttk.Frame(bas)
+        boutons.pack(anchor="w")
+        self.boutons_societe = [
+            ttk.Button(boutons, text="Ajouter au journal…", command=self._ajouter_journal),
+            ttk.Button(boutons, text="Tableau de bord (page)", command=self._ouvrir_tableau_de_bord),
+            ttk.Button(boutons, text="Projets, revenus, journal (Excel)",
+                       command=lambda: self._ouvrir(societe.fichier_classeur() if self.dossier else None)),
+            ttk.Button(boutons, text="Dossier société",
+                       command=lambda: self._ouvrir(societe.dossier_societe() if self.dossier else None)),
+        ]
+        for b in self.boutons_societe:
+            b.pack(side="left", padx=(0, 6))
+
+    def _construire_exercices(self, parent) -> None:
+        haut = self._section(parent, "Exercice")
+        ligne = ttk.Frame(haut)
+        ligne.pack(fill="x")
+        ttk.Label(ligne, text="Exercice :").pack(side="left")
+        self.v_exercice = tk.StringVar()
+        self.cb_exercice = ttk.Combobox(ligne, textvariable=self.v_exercice, width=8, state="readonly")
+        self.cb_exercice.pack(side="left", padx=(6, 12))
+        self.cb_exercice.bind("<<ComboboxSelected>>", lambda _e: self._actualiser_exercices())
+        self.lbl_statut_exercice = ttk.Label(ligne, text="", style="Chemin.TLabel")
+        self.lbl_statut_exercice.pack(side="left")
+        self.lbl_compteurs_exercice = ttk.Label(haut, text="", style="Doux.TLabel", wraplength=760, justify="left")
+        self.lbl_compteurs_exercice.pack(anchor="w", pady=(6, 0))
+        self.lbl_alerte_exercice = ttk.Label(haut, text="", foreground="#c2410c", wraplength=760, justify="left")
+        self.lbl_alerte_exercice.pack(anchor="w")
+
+        milieu = self._section(parent, "Changements demandés pendant l'exercice", extensible=True)
+        colonnes = ("date", "action", "liste", "cle", "champ", "avant", "apres", "motif")
+        self.arbre_changements = ttk.Treeview(milieu, columns=colonnes, show="headings", height=7)
+        for col, texte, largeur in [("date", "Date", 85), ("action", "Action", 90), ("liste", "Liste", 100),
+                                    ("cle", "Élément", 110), ("champ", "Champ", 80), ("avant", "Avant", 110),
+                                    ("apres", "Après", 110), ("motif", "Motif", 180)]:
+            self.arbre_changements.heading(col, text=texte)
+            self.arbre_changements.column(col, width=largeur, anchor="w", stretch=(col == "motif"))
+        self.arbre_changements.pack(fill="both", expand=True)
+
+        bas = self._section(parent, "Actions")
+        b1 = ttk.Frame(bas)
+        b1.pack(anchor="w")
+        b2 = ttk.Frame(bas)
+        b2.pack(anchor="w", pady=(6, 0))
+        self.boutons_exercices = [
+            ttk.Button(b1, text="Demander un changement…", command=self._demander_changement),
+            ttk.Button(b1, text="Écarts avec l'exercice précédent…", command=self._voir_ecarts),
+            ttk.Button(b1, text="Suggestions depuis les fichiers…", command=self._voir_suggestions),
+            ttk.Button(b2, text="Voir le référentiel (Excel)", command=self._voir_referentiel),
+            ttk.Button(b2, text="Construire depuis les fichiers…", command=self._construire_exercice),
+            ttk.Button(b2, text="Valider et verrouiller…", command=self._valider_exercice),
+            ttk.Button(b2, text="Rouvrir…", command=self._rouvrir_exercice),
+        ]
+        for b in self.boutons_exercices:
+            b.pack(side="left", padx=(0, 6))
+
+    # ------------------------------------------------------------ exercices
+
+    def _annee(self) -> int | None:
+        v = self.v_exercice.get().strip()
+        return int(v) if v.isdigit() else None
+
+    def _actualiser_assistant(self) -> None:
+        if self.dossier is None:
+            return
+        if self.sous_onglets.index("current") == 0:
+            self._actualiser_societe()
+        else:
+            self._actualiser_exercices()
+
+    def _actualiser_exercices(self) -> None:
+        if self.dossier is None:
+            return
+        annees = exercices.lister()
+        self.cb_exercice.configure(values=[str(a) for a in annees])
+        if self._annee() not in annees:
+            courant = exercices.exercice_courant()
+            self.v_exercice.set(str(courant) if courant else "")
+        self.arbre_changements.delete(*self.arbre_changements.get_children())
+        annee = self._annee()
+        if annee is None:
+            self.lbl_statut_exercice.configure(text="Aucun exercice pour l'instant.")
+            self.lbl_compteurs_exercice.configure(
+                text="Dépose le plan comptable et le grand livre normalisés dans entrees › 06_societe › imports › "
+                     "AAAA, puis clique sur « Construire depuis les fichiers… » pour créer le premier exercice.")
+            self.lbl_alerte_exercice.configure(text="")
+            return
+        try:
+            r = exercices.resume(annee)
+        except Exception as e:  # noqa: BLE001
+            self.lbl_alerte_exercice.configure(text=f"Lecture impossible : {e}")
+            return
+        if r["statut"] == exercices.VALIDE:
+            jour = r["valide_le"][:10].split("-")
+            self.lbl_statut_exercice.configure(text=f"🔒 Validé et verrouillé le {'.'.join(reversed(jour))}")
+        else:
+            self.lbl_statut_exercice.configure(text="Ouvert : les changements sont possibles")
+        self.lbl_compteurs_exercice.configure(
+            text=" · ".join(f"{nom} : {n}" for nom, n in r["compteurs"].items()))
+        alertes = [a for a in (exercices.verifier(x) for x in annees) if a]
+        self.lbl_alerte_exercice.configure(text="\n".join(f"• {a}" for a in alertes))
+        for c in r["changements"]:
+            jour = str(c.get("date") or "")[:10]
+            self.arbre_changements.insert("", "end", values=(
+                ".".join(reversed(jour.split("-"))) if jour else "", c.get("action", ""),
+                exercices.NOMS_LISTES.get(c.get("liste"), c.get("liste", "")), c.get("cle", ""),
+                c.get("champ", "") or "", "" if c.get("avant") is None else c.get("avant"),
+                "" if c.get("apres") is None else c.get("apres"), c.get("motif", "")))
+
+    def _construire_exercice(self) -> None:
+        if self.dossier is None:
+            return
+        imports = societe.dossier_societe() / "imports"
+        proposees = sorted(int(p.name) for p in imports.iterdir() if p.is_dir() and p.name.isdigit()) \
+            if imports.exists() else []
+        defaut = next((a for a in proposees if a not in exercices.lister()), date.today().year - 1)
+        annee = simpledialog.askinteger(
+            TITRE, "Construire le référentiel de quel exercice ?\n\n"
+                   "Reconsigliere lit entrees › 06_societe › imports › AAAA (plan comptable et grand livre),\n"
+                   "ton classeur des brevets (état au 31.12) et societe.xlsx (projets, revenus).",
+            initialvalue=defaut, minvalue=2000, maxvalue=2100, parent=self.tk)
+        if annee is None:
+            return
+        ecraser = False
+        if exercices.fichier_referentiel(annee).exists():
+            if exercices.est_valide(annee):
+                messagebox.showwarning(TITRE, f"L'exercice {annee} est validé et verrouillé.", parent=self.tk)
+                return
+            n = len(exercices.lire(annee)["Changements"])
+            if not messagebox.askyesno(
+                    TITRE, f"Le référentiel {annee} existe déjà"
+                           + (f" et contient {n} changement(s), qui seront effacés" if n else "")
+                           + ".\n\nLe reconstruire depuis les fichiers ?", parent=self.tk):
+                return
+            ecraser = True
+        try:
+            compteurs = exercices.construire(annee, ecraser_changements=ecraser)
+        except PermissionError:
+            messagebox.showerror(TITRE, "Un fichier est ouvert dans Excel. Ferme-le puis réessaie.", parent=self.tk)
+            return
+        self.v_exercice.set(str(annee))
+        self._actualiser_exercices()
+        details = "\n".join(f"{exercices.NOMS_LISTES[n]} : {v}" for n, v in compteurs.items())
+        messagebox.showinfo(TITRE, f"Référentiel {annee} construit.\n\n{details}\n\n"
+                                   "Contrôle-le avec « Voir le référentiel », puis valide-le.", parent=self.tk)
+
+    def _demander_changement(self) -> None:
+        annee = self._annee()
+        if annee is None:
+            messagebox.showinfo(TITRE, "Construis d'abord un exercice.", parent=self.tk)
+            return
+        if exercices.est_valide(annee):
+            messagebox.showwarning(TITRE, f"L'exercice {annee} est validé et verrouillé.\n"
+                                          "Choisis l'exercice ouvert, ou rouvre celui-ci avec un motif.", parent=self.tk)
+            return
+        Changement(self.tk, annee, on_fin=self._actualiser_exercices)
+
+    def _voir_ecarts(self) -> None:
+        annee = self._annee()
+        if annee is None:
+            return
+        precedents = [a for a in exercices.lister() if a < annee]
+        if not precedents:
+            messagebox.showinfo(TITRE, f"Aucun exercice avant {annee} : rien à comparer.", parent=self.tk)
+            return
+        Ecarts(self.tk, annee, precedents[-1], exercices.ecarts(annee, precedents[-1]))
+
+    def _voir_suggestions(self) -> None:
+        annee = self._annee()
+        if annee is None:
+            return
+        if exercices.est_valide(annee):
+            messagebox.showinfo(TITRE, f"L'exercice {annee} est validé et verrouillé.", parent=self.tk)
+            return
+        try:
+            lignes = exercices.suggestions(annee)
+        except Exception as e:  # noqa: BLE001
+            messagebox.showerror(TITRE, f"Lecture impossible : {e}", parent=self.tk)
+            return
+        if not lignes:
+            messagebox.showinfo(TITRE, f"Les fichiers ne montrent rien de nouveau pour {annee}.", parent=self.tk)
+            return
+
+        def appliquer(choisis, motif: str) -> bool:
+            try:
+                for e in choisis:
+                    exercices.appliquer(annee, e, motif)
+            except (ValueError, exercices.ExerciceVerrouille) as err:
+                messagebox.showwarning(TITRE, str(err), parent=self.tk)
+                return False
+            except PermissionError:
+                messagebox.showerror(TITRE, "Le référentiel est ouvert dans Excel. Ferme-le puis réessaie.",
+                                     parent=self.tk)
+                return False
+            self._actualiser_exercices()
+            return True
+
+        Ecarts(self.tk, annee, None, lignes, on_appliquer=appliquer)
+
+    def _voir_referentiel(self) -> None:
+        annee = self._annee()
+        if annee is None:
+            return
+        config.DOSSIER_SORTIES.mkdir(parents=True, exist_ok=True)
+        try:
+            copie = exercices.copier_vers(annee, config.DOSSIER_SORTIES / f"referentiel_{annee}_lecture.xlsx")
+        except PermissionError:
+            messagebox.showerror(TITRE, "La copie précédente est ouverte dans Excel. Ferme-la puis réessaie.",
+                                 parent=self.tk)
+            return
+        self._ouvrir(copie)
+
+    def _valider_exercice(self) -> None:
+        annee = self._annee()
+        if annee is None or exercices.est_valide(annee):
+            return
+        alerte = next((a for a in (exercices.verifier(x) for x in exercices.lister()) if a), None)
+        if alerte:
+            messagebox.showwarning(TITRE, alerte, parent=self.tk)
+            return
+        n = len(exercices.lire(annee)["Changements"])
+        e = exercices.ecarts(annee)
+        if not messagebox.askyesno(
+                TITRE, f"Valider et verrouiller l'exercice {annee} ?\n\n"
+                       f"{n} changement(s) demandé(s), {len(e)} écart(s) avec l'exercice précédent.\n\n"
+                       f"Après validation, {annee} ne peut plus être modifié sans être rouvert avec un motif.\n"
+                       f"L'exercice {annee + 1} s'ouvrira comme copie s'il n'existe pas encore.", parent=self.tk):
+            return
+        suivant = exercices.valider(annee)
+        if suivant:
+            self.v_exercice.set(str(suivant))
+        self._actualiser_exercices()
+
+    def _rouvrir_exercice(self) -> None:
+        annee = self._annee()
+        if annee is None or not exercices.est_valide(annee):
+            return
+        motif = simpledialog.askstring(TITRE, f"Pourquoi rouvrir l'exercice {annee} ?\n"
+                                              "Le motif reste dans l'historique.", parent=self.tk)
+        if not motif or not motif.strip():
+            return
+        exercices.rouvrir(annee, motif)
+        self._actualiser_exercices()
+
+    # ------------------------------------------------------------ société
+
+    def _actualiser_societe(self) -> dict | None:
+        if self.dossier is None:
+            return None
+        try:
+            societe.creer_modele_si_absent()
+            donnees = societe.synthese(societe.charger())
+        except Exception as e:  # noqa: BLE001 - l'erreur doit apparaître dans la fenêtre
+            self.lbl_attention.configure(text=f"Lecture impossible : {e}")
+            return None
+        c = donnees["compteurs"]
+        self.tuiles["familles"].configure(text=f"{c['familles_actives']} / {c['familles']}")
+        self.tuiles["depots"].configure(text=f"{c['depots_actifs']} (+{c['entrees_annoncees']})")
+        self.tuiles["projets"].configure(text=f"{c['projets_capitalisables']} / {c['projets']}")
+        self.tuiles["revenus"].configure(text=str(c["revenus_actifs"]))
+        self.tuiles["capitalisable"].configure(text=societe.format_chf(c["capitalisable"]))
+        self.tuiles["charge"].configure(text=societe.format_chf(c["charge"]))
+        self.arbre.delete(*self.arbre.get_children())
+        for f in donnees["familles"]:
+            self.arbre.insert("", "end", values=(
+                f["famille"], f["titre"], f["statut"], ", ".join(f["pays"]),
+                societe.format_chf(f["capitalisable"]), societe.format_chf(f["charge"])))
+        self.lbl_attention.configure(
+            text="\n".join(f"• {p}" for p in donnees["attention"]) if donnees["attention"] else "")
+        fichiers = ", ".join(donnees["fichiers"]) or "aucun"
+        self.lbl_societe.configure(
+            text=f"Fichiers lus dans entrees › 06_societe : {fichiers}. Dépose-y ton classeur des brevets ; "
+                 "tiens les projets, les revenus et le journal dans societe.xlsx.")
+        return donnees
+
+    def _ouvrir_tableau_de_bord(self) -> None:
+        if self.dossier is None:
+            return
+        try:
+            donnees, chemin = societe.actualiser()
+        except PermissionError as e:
+            messagebox.showerror(TITRE, f"Fichier ouvert dans un autre programme :\n{e.filename or e}", parent=self.tk)
+            return
+        self._ouvrir(chemin)
+
+    def _ajouter_journal(self) -> None:
+        if self.dossier is None:
+            return
+        Journal(self.tk, on_valider=self._enregistrer_journal)
+
+    def _enregistrer_journal(self, quand: date, categorie: str, evenement: str, lien: str,
+                             montant: float | None) -> bool:
+        try:
+            societe.ajouter_au_journal(quand, categorie, evenement, lien, montant)
+        except PermissionError:
+            messagebox.showerror(TITRE, "societe.xlsx est ouvert dans Excel.\nFerme-le puis réessaie.", parent=self.tk)
+            return False
+        self._actualiser_societe()
+        return True
 
     # ------------------------------------------------------------ dossier de travail
 
@@ -237,6 +594,12 @@ class Fenetre:
         for cle, (_, chemin) in self.boutons_resultats.items():
             existe = pret and chemin(self.dossier).exists()
             self.widgets_resultats[cle].state(["!disabled" if existe else "disabled"])
+        for b in self.boutons_societe:
+            b.state(["!disabled" if pret else "disabled"])
+        for b in self.boutons_exercices:
+            b.state(["!disabled" if pret else "disabled"])
+        if pret and self.onglets.index("current") == 1:
+            self._actualiser_assistant()
         self._actualiser_compteurs()
 
     def _actualiser_compteurs(self) -> None:
@@ -442,6 +805,219 @@ class Fenetre:
             installation.ecrire_reglage("modele_ia", modele.get())
             fenetre.destroy()
         ttk.Button(cadre, text="Enregistrer", command=enregistrer).grid(row=3, column=1, sticky="e", pady=(12, 0))
+
+
+class Journal(tk.Toplevel):
+    """Petite fenêtre pour ajouter un événement au journal de la société."""
+
+    def __init__(self, parent: tk.Tk, on_valider) -> None:
+        super().__init__(parent)
+        self.title("Ajouter au journal")
+        self.transient(parent)
+        self.resizable(False, False)
+        self.on_valider = on_valider
+        cadre = ttk.Frame(self, padding=14)
+        cadre.pack(fill="both", expand=True)
+        self.v_date = tk.StringVar(value=date.today().strftime("%d.%m.%Y"))
+        self.v_categorie = tk.StringVar(value=societe.CATEGORIES_JOURNAL[0])
+        self.v_evenement = tk.StringVar()
+        self.v_lien = tk.StringVar()
+        self.v_montant = tk.StringVar()
+        champs = [
+            ("Date (JJ.MM.AAAA)", ttk.Entry(cadre, textvariable=self.v_date, width=14)),
+            ("Catégorie", ttk.Combobox(cadre, textvariable=self.v_categorie, values=societe.CATEGORIES_JOURNAL, width=18)),
+            ("Événement", ttk.Entry(cadre, textvariable=self.v_evenement, width=50)),
+            ("Lien (brevet, projet, client…)", ttk.Entry(cadre, textvariable=self.v_lien, width=30)),
+            ("Montant CHF (facultatif)", ttk.Entry(cadre, textvariable=self.v_montant, width=14)),
+        ]
+        for i, (texte, champ) in enumerate(champs):
+            ttk.Label(cadre, text=texte).grid(row=i, column=0, sticky="w", pady=3, padx=(0, 10))
+            champ.grid(row=i, column=1, sticky="w", pady=3)
+        boutons = ttk.Frame(cadre)
+        boutons.grid(row=len(champs), column=0, columnspan=2, sticky="e", pady=(10, 0))
+        ttk.Button(boutons, text="Annuler", command=self.destroy).pack(side="right")
+        ttk.Button(boutons, text="Enregistrer", command=self._valider).pack(side="right", padx=(0, 6))
+        champs[2][1].focus_set()
+        self.bind("<Return>", lambda _e: self._valider())
+        self.bind("<Escape>", lambda _e: self.destroy())
+
+    def _valider(self) -> None:
+        quand = societe._date(self.v_date.get())
+        if quand is None:
+            messagebox.showwarning(TITRE, "Date invalide : écris-la sous la forme 26.11.2026.", parent=self)
+            return
+        evenement = self.v_evenement.get().strip()
+        if not evenement:
+            messagebox.showwarning(TITRE, "Décris l'événement.", parent=self)
+            return
+        montant_texte = self.v_montant.get().strip()
+        montant = societe._montant(montant_texte) if montant_texte else None
+        if self.on_valider(quand, self.v_categorie.get().strip(), evenement, self.v_lien.get().strip(), montant):
+            self.destroy()
+
+
+class Changement(tk.Toplevel):
+    """Demande de changement : ajout, modification ou retrait d'un élément d'une liste du référentiel."""
+
+    def __init__(self, parent: tk.Tk, annee: int, on_fin) -> None:
+        super().__init__(parent)
+        self.title(f"Demander un changement — exercice {annee}")
+        self.transient(parent)
+        self.annee, self.on_fin = annee, on_fin
+        self.listes = exercices.lire(annee)
+        self.noms = {v: k for k, v in exercices.NOMS_LISTES.items()}
+        cadre = ttk.Frame(self, padding=14)
+        cadre.pack(fill="both", expand=True)
+        self.v_liste = tk.StringVar(value=exercices.NOMS_LISTES["Brevets"])
+        self.v_action = tk.StringVar(value="modification")
+        self.v_cle = tk.StringVar()
+        self.v_date = tk.StringVar(value=date.today().strftime("%d.%m.%Y"))
+        self.v_motif = tk.StringVar()
+        ttk.Label(cadre, text="Liste").grid(row=0, column=0, sticky="w", pady=3)
+        cb = ttk.Combobox(cadre, textvariable=self.v_liste, values=list(self.noms), state="readonly", width=20)
+        cb.grid(row=0, column=1, sticky="w")
+        ttk.Label(cadre, text="Action").grid(row=1, column=0, sticky="w", pady=3)
+        ca = ttk.Combobox(cadre, textvariable=self.v_action, values=exercices.ACTIONS, state="readonly", width=20)
+        ca.grid(row=1, column=1, sticky="w")
+        ttk.Label(cadre, text="Élément").grid(row=2, column=0, sticky="w", pady=3)
+        self.cb_cle = ttk.Combobox(cadre, textvariable=self.v_cle, width=40)
+        self.cb_cle.grid(row=2, column=1, sticky="w")
+        self.champs = ttk.Labelframe(cadre, text="Valeurs", padding=8)
+        self.champs.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(8, 8))
+        ttk.Label(cadre, text="Date du changement").grid(row=4, column=0, sticky="w", pady=3)
+        ttk.Entry(cadre, textvariable=self.v_date, width=14).grid(row=4, column=1, sticky="w")
+        ttk.Label(cadre, text="Motif").grid(row=5, column=0, sticky="w", pady=3)
+        ttk.Entry(cadre, textvariable=self.v_motif, width=50).grid(row=5, column=1, sticky="w")
+        boutons = ttk.Frame(cadre)
+        boutons.grid(row=6, column=0, columnspan=2, sticky="e", pady=(10, 0))
+        ttk.Button(boutons, text="Fermer", command=self.destroy).pack(side="right")
+        ttk.Button(boutons, text="Enregistrer", command=self._valider).pack(side="right", padx=(0, 6))
+        self.v_valeurs: dict[str, tk.StringVar] = {}
+        self.entrees: list[ttk.Entry] = []
+        cb.bind("<<ComboboxSelected>>", lambda _e: self._rafraichir(True))
+        ca.bind("<<ComboboxSelected>>", lambda _e: self._rafraichir(False))
+        self.cb_cle.bind("<<ComboboxSelected>>", lambda _e: self._remplir())
+        self.bind("<Escape>", lambda _e: self.destroy())
+        self._rafraichir(True)
+
+    def _liste(self) -> str:
+        return self.noms[self.v_liste.get()]
+
+    def _rafraichir(self, liste_changee: bool) -> None:
+        liste = self._liste()
+        cle, colonnes = exercices.LISTES[liste]
+        self.cb_cle.configure(values=[str(l.get(cle)) for l in self.listes[liste] if l.get(cle) not in (None, "")])
+        if liste_changee:
+            self.v_cle.set("")
+            for w in self.champs.winfo_children():
+                w.destroy()
+            self.v_valeurs = {}
+            self.entrees = []
+            for i, col in enumerate(c for c in colonnes if c != cle):
+                ttk.Label(self.champs, text=col).grid(row=i, column=0, sticky="w", padx=(0, 10), pady=1)
+                v = tk.StringVar()
+                e = ttk.Entry(self.champs, textvariable=v, width=44)
+                e.grid(row=i, column=1, sticky="w", pady=1)
+                self.v_valeurs[col] = v
+                self.entrees.append(e)
+        retrait = self.v_action.get() == "retrait"
+        for e in self.entrees:
+            e.state(["disabled" if retrait else "!disabled"])
+        self._remplir()
+
+    def _remplir(self) -> None:
+        liste = self._liste()
+        cle, _ = exercices.LISTES[liste]
+        ligne = next((l for l in self.listes[liste] if str(l.get(cle)) == self.v_cle.get()), None)
+        self._origine = {}
+        for col, v in self.v_valeurs.items():
+            valeur = "" if ligne is None or ligne.get(col) is None else str(ligne.get(col))
+            if self.v_action.get() == "ajout":
+                valeur = ""
+            v.set(valeur)
+            self._origine[col] = valeur
+
+    def _valider(self) -> None:
+        quand = societe._date(self.v_date.get())
+        if quand is None:
+            messagebox.showwarning(TITRE, "Date invalide : écris-la sous la forme 15.03.2025.", parent=self)
+            return
+        action = self.v_action.get()
+        valeurs = {}
+        if action != "retrait":
+            for col, v in self.v_valeurs.items():
+                texte = v.get().strip()
+                if action == "ajout" and texte or action == "modification" and texte != self._origine.get(col, ""):
+                    valeurs[col] = texte or None
+        try:
+            exercices.demander_changement(self.annee, action, self._liste(), self.v_cle.get(), valeurs,
+                                          self.v_motif.get(), quand)
+        except (ValueError, exercices.ExerciceVerrouille) as e:
+            messagebox.showwarning(TITRE, str(e), parent=self)
+            return
+        except PermissionError:
+            messagebox.showerror(TITRE, "Le référentiel est ouvert dans Excel. Ferme-le puis réessaie.", parent=self)
+            return
+        self.listes = exercices.lire(self.annee)
+        self.v_motif.set("")
+        self._rafraichir(False)
+        self.on_fin()
+        messagebox.showinfo(TITRE, "Changement enregistré.", parent=self)
+
+
+class Ecarts(tk.Toplevel):
+    """Liste des écarts entre deux exercices."""
+
+    def __init__(self, parent: tk.Tk, annee: int, reference: int | None, lignes, on_appliquer=None) -> None:
+        super().__init__(parent)
+        suggestions = on_appliquer is not None
+        self.title(f"Suggestions pour {annee}" if suggestions else f"Écarts entre {reference} et {annee}")
+        self.transient(parent)
+        self.geometry("860x460")
+        self.lignes, self.on_appliquer = list(lignes), on_appliquer
+        cadre = ttk.Frame(self, padding=12)
+        cadre.pack(fill="both", expand=True)
+        entete = (f"{len(lignes)} différence(s) entre les fichiers déposés et le référentiel {annee}. "
+                  "Sélectionne celles à appliquer (Ctrl ou Maj pour plusieurs)." if suggestions
+                  else f"{len(lignes)} écart(s) entre {reference} et {annee}.")
+        ttk.Label(cadre, text=entete, style="Chemin.TLabel", wraplength=820).pack(anchor="w", pady=(0, 8))
+        colonnes = ("liste", "cle", "nature", "champ", "avant", "apres")
+        self.arbre = ttk.Treeview(cadre, columns=colonnes, show="headings",
+                                  selectmode="extended" if suggestions else "browse")
+        avant, apres = ("Référentiel", "Fichiers") if suggestions else (f"En {reference}", f"En {annee}")
+        for col, texte, largeur in [("liste", "Liste", 100), ("cle", "Élément", 120), ("nature", "Nature", 95),
+                                    ("champ", "Champ", 85), ("avant", avant, 210), ("apres", apres, 210)]:
+            self.arbre.heading(col, text=texte)
+            self.arbre.column(col, width=largeur, anchor="w")
+        self._remplir()
+        self.arbre.pack(fill="both", expand=True)
+        bas = ttk.Frame(cadre)
+        bas.pack(fill="x", pady=(8, 0))
+        ttk.Button(bas, text="Fermer", command=self.destroy).pack(side="right")
+        if suggestions:
+            self.v_motif = tk.StringVar(value="Selon les fichiers déposés")
+            ttk.Label(bas, text="Motif :").pack(side="left")
+            ttk.Entry(bas, textvariable=self.v_motif, width=40).pack(side="left", padx=(6, 6))
+            ttk.Button(bas, text="Appliquer la sélection", command=self._appliquer).pack(side="left")
+
+    def _remplir(self) -> None:
+        self.arbre.delete(*self.arbre.get_children())
+        for i, e in enumerate(self.lignes):
+            self.arbre.insert("", "end", iid=str(i), values=(
+                exercices.NOMS_LISTES.get(e.liste, e.liste), e.cle, e.nature, e.champ,
+                "" if e.avant is None else e.avant, "" if e.apres is None else e.apres))
+
+    def _appliquer(self) -> None:
+        choix = [self.lignes[int(i)] for i in self.arbre.selection()]
+        if not choix:
+            messagebox.showinfo(TITRE, "Sélectionne au moins une ligne.", parent=self)
+            return
+        if not self.v_motif.get().strip():
+            messagebox.showwarning(TITRE, "Indique un motif.", parent=self)
+            return
+        if self.on_appliquer(choix, self.v_motif.get()):
+            self.lignes = [e for e in self.lignes if e not in choix]
+            self._remplir()
 
 
 def _nettete_windows() -> None:

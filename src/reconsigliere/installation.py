@@ -33,13 +33,26 @@ DOSSIERS = [
      "- Feuille partenaires : un mot du libellé bancaire et le nom de partenaire à utiliser.\n"
      "- Feuille transactions : pour un id de transaction, le partenaire, le PDF à lier, une explication ou un statut forcé.\n\n"
      "Tes corrections passent toujours avant le rapprochement automatique.\n"),
+    ("entrees/06_societe", "Société (brevets, projets, revenus)",
+     "Dépose ici ton classeur des brevets (liste des brevets et onglets de coûts, tel que tu le tiens déjà).\n"
+     "Reconsigliere reconnaît les colonnes ID, Title/Titre, Patent number, Filing date, Approved date, Abandon date,\n"
+     "Patent owner, puis pour les coûts : Brevet, Classification (Capitalisable/Charge), Montant HT CHF, Date facture.\n\n"
+     "Le classeur societe.xlsx est créé au premier lancement : tiens-y les onglets Projets, Revenus et Journal.\n"
+     "L'onglet Société de la fenêtre et la page sorties/societe.html montrent l'état de la société.\n"),
+    ("entrees/06_societe/imports", None,
+     "Fichiers normalisés par exercice, un sous-dossier par année (imports/2024, imports/2025…).\n"
+     "Chaque classeur peut contenir les onglets PlanComptable (code, nom, type) et GrandLivre\n"
+     "(date, compte, libelle_compte, piece, partenaire, libelle, debit, credit).\n"
+     "« Construire depuis les fichiers » et « Suggestions depuis les fichiers » les lisent.\n\n"
+     "Le dossier exercices, à côté, contient les référentiels versionnés : ne le modifie pas à la main.\n"),
     ("entrees/07_documents", "Documents à importer",
      "Dépose ici les documents comptables à transformer en tableaux : bilan, compte de résultat,\n"
      "grand livre, plan comptable, annexe, en PDF, photo ou Excel. Un même PDF peut tout contenir.\n"
      "Le bouton « Importer les documents » les classe page par page et écrit un classeur par document\n"
      "dans entrees/06_societe/imports/AAAA (AAAA = exercice) et une page lisible dans sorties/imports.\n"),
     ("sorties", "Résultats",
-     "Recréé à chaque lancement : reconciliation.xlsx, reconciliation.html, pdf_renommes et a_comptabiliser.\n"),
+     "Recréé à chaque lancement : reconciliation.xlsx, reconciliation.html, pdf_renommes et a_comptabiliser.\n"
+     "societe.html est recréé par le bouton « Tableau de bord » de l'onglet Société.\n"),
 ]
 
 EXTENSIONS_UTILES = {".pdf", ".png", ".jpg", ".jpeg", ".tif", ".tiff", ".xlsx", ".xlsm", ".xls", ".csv"}
