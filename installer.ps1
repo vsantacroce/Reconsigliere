@@ -11,7 +11,8 @@
 # Ensuite, l'icône met le programme à jour toute seule à chaque ouverture.
 # Tes relevés et tes factures restent dans ton dossier de travail (Documents\Reconsigliere), jamais touché.
 
-param([string]$Branche = "main")
+# Branche suivie : main par défaut. Pour tester une autre branche : $env:RECONSIGLIERE_BRANCHE = "nom" avant la commande.
+$Branche = if ($env:RECONSIGLIERE_BRANCHE) { $env:RECONSIGLIERE_BRANCHE } else { "main" }
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"   # accélère fortement Invoke-WebRequest
@@ -54,7 +55,7 @@ if (-not $Python) {
     }
     if (-not $installe) {
         $exe = Join-Path $env:TEMP "python-$VersionPython-amd64.exe"
-        Invoke-WebRequest "https://www.python.org/ftp/python/$VersionPython/python-$VersionPython-amd64.exe" -OutFile $exe
+        Invoke-WebRequest "https://www.python.org/ftp/python/$VersionPython/python-$VersionPython-amd64.exe" -OutFile $exe -UseBasicParsing
         Start-Process $exe -Wait -ArgumentList "/quiet", "InstallAllUsers=0", "PrependPath=1", "Include_tcltk=1", "Include_launcher=1"
         Remove-Item $exe -ErrorAction SilentlyContinue
         $Python = Trouver-Python
