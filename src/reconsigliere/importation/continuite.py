@@ -82,12 +82,11 @@ def regrouper(pages: list[Page], classements: list[tuple[str | None, float, bool
 
 
 def en_sections(typees: list[tuple[Page, str | None, str]]) -> list[Section]:
+    """Regroupe les pages consécutives de même type (un titre répété sur chaque page ne coupe pas)."""
     sections: list[Section] = []
     for page, type_, methode in typees:
         type_ = type_ or "autre"
-        if sections and sections[-1].type == type_ and methode == "continuite":
-            sections[-1].pages.append(page)
-        elif sections and sections[-1].type == type_ and type_ in ("autre", "annexe"):
+        if sections and sections[-1].type == type_:
             sections[-1].pages.append(page)
         else:
             sections.append(Section(type=type_, pages=[page], methode=methode))
