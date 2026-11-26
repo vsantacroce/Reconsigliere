@@ -105,7 +105,7 @@ class Regle:
 
     @property
     def condition(self) -> str:
-        if len(self.branches) == 1 and self.branches[0].nature == "toujours":
+        if all(b.nature == "toujours" for b in self.branches):
             return ""
         return " ; ".join(f"{b.compte} {b.texte()}" for b in self.branches)
 
@@ -216,6 +216,17 @@ def _plan(referentiel: dict | None) -> dict[str, str]:
             for p in referentiel.get("PlanComptable", []) if code_compte(p.get("code"))}
 
 
+def _regle_simple_a_existe(obs: list[Observation], seuil: int) -> bool:
+    """Vrai si, à un moment, une règle à un seul compte a été active (donc mon analyse d'alors était fausse)."""
+    n: Counter = Counter()
+    for o in obs:
+        n[o.compte] += 1
+        premier = n.most_common(2)
+        if premier[0][1] >= seuil and (len(premier) == 1 or premier[1][1] < 2):
+            return True
+    return False
+
+
 def _regle_du_partenaire(obs: list[Observation], seuil: int, alertes: list[Alerte]) -> Regle:
     nom = obs[-1].partenaire
     n = Counter(o.compte for o in obs)
@@ -236,7 +247,7 @@ def _regle_du_partenaire(obs: list[Observation], seuil: int, alertes: list[Alert
                      total, f"{k} corrections sur {total}", explication=explication)
 
     utiles = [o for o in obs if o.compte in significatifs]
-    regle_simple_aurait_existe = k >= seuil
+    regle_simple_aurait_existe = _regle_simple_a_existe(obs, seuil)
     periode = _critere_periode(utiles)
     if periode:
         b = periode[0]

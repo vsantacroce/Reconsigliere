@@ -143,6 +143,14 @@ class TestRegles(unittest.TestCase):
         self.assertEqual(r.compte_pour(tr("Z", date(2026, 1, 1), -9, "MIGROS CARBURANT 12", "Migros")), "6200")
         self.assertEqual(r.compte_pour(tr("Z", date(2026, 1, 1), -9, "MIGROS MARCHE 12", "Migros")), "6000")
         self.assertIn("carburant", r.condition)
+        self.assertFalse(any("se trompait" in x.message for x in a.alertes))
+
+    def test_regle_active_puis_deuxieme_compte_l_analyse_se_trompait(self):
+        comptes = ["6000", "6000", "6000", "6200", "6000", "6200"]
+        libelles = ["MIGROS MARCHE"] * 3 + ["MIGROS CARBURANT", "MIGROS MARCHE", "MIGROS CARBURANT"]
+        a = analyser(*jeu(comptes, libelles=libelles))
+        self.assertEqual(a.regles[0].etat, apprentissage.CONDITIONNELLE)
+        self.assertTrue(any("se trompait" in x.message for x in a.alertes))
 
     def test_montant_separe_deux_comptes(self):
         comptes = ["6000", "1500", "6000", "1500", "6000"]
@@ -159,6 +167,7 @@ class TestRegles(unittest.TestCase):
         montants = [-20.0, -25.0, -10.0, -30.0, -12.0, -22.0]
         a = analyser(*jeu(comptes, montants=montants))
         self.assertEqual(a.regles[0].etat, apprentissage.SUSPENDUE)
+        self.assertEqual(a.regles[0].condition, "")
         self.assertIsNone(a.regles[0].compte_pour(tr("Z", date(2026, 1, 1), -20, "ACHAT", "Migros")))
         self.assertTrue(any("introuvable" in x.message for x in a.alertes))
 
