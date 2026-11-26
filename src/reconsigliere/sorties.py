@@ -65,6 +65,7 @@ def _lignes(transactions: list[dict]) -> list[dict]:
         "statut": t["statut"],
         "compte_propose": t.get("compte_propose", ""),
         "fiabilite_compte": t.get("fiabilite_compte", ""),
+        "origine_compte": t.get("origine_compte", ""),
         "pdf_renomme": t.get("pdf_renomme", ""),
         "pdf_original": t["pdf"]["nom"] if t["pdf"] else "",
         "score": t["score"],

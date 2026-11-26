@@ -631,10 +631,14 @@ class Proposeur:
 
 
 def proposer_comptes(transactions: list[dict]) -> int:
-    """Ajoute compte_propose / fiabilite_compte à chaque transaction. Rend le nombre de propositions."""
+    """Ajoute compte_propose / fiabilite_compte à chaque transaction. Rend le nombre de propositions.
+
+    compte_reference garde le seul numéro proposé par le référentiel : apprentissage.py le compare à tes corrections.
+    """
     for t in transactions:
         t["compte_propose"] = ""
         t["fiabilite_compte"] = ""
+        t["compte_reference"] = ""
     if not lister():
         return 0
     proposeur = Proposeur()
@@ -646,6 +650,7 @@ def proposer_comptes(transactions: list[dict]) -> int:
             p = None
         if p:
             t["compte_propose"] = f"{p['compte']} {p['libelle_compte']}".strip()
+            t["compte_reference"] = p["compte"]
             t["fiabilite_compte"] = ", ".join(x for x in (p["fiabilite"], f"selon {p['origine']}",
                                                          f"référentiel {p['exercice']}") if x)
             n += 1

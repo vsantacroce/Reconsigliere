@@ -13,7 +13,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Callable
 
-from . import chargement, config, corrections, exercices, installation, pdf_extraction, rapprochement, sorties
+from . import (apprentissage, chargement, config, corrections, exercices, installation, pdf_extraction,
+               rapprochement, sorties)
 
 
 def main(log: Callable[[str], None] = print) -> dict:
@@ -54,18 +55,29 @@ def main(log: Callable[[str], None] = print) -> dict:
             log(f"    Compte proposé pour {n_comptes} transaction(s), selon le référentiel de leur exercice")
     except Exception as e:  # noqa: BLE001 - la proposition de compte ne doit jamais bloquer la réconciliation
         log(f"    Comptes non proposés : {e}")
+    analyse = None
+    try:
+        analyse = apprentissage.executer(transactions, corr)
+        r = analyse.resume
+        if r["corrections"]:
+            log(f"    Apprentissage : {r['corrections']} correction(s) de compte, {r['actives'] + r['conditionnelles']} "
+                f"règle(s) appliquée(s) à {r['appliquees']} transaction(s), {r['alertes']} alerte(s)")
+    except Exception as e:  # noqa: BLE001 - l'apprentissage ne doit jamais bloquer la réconciliation
+        log(f"    Apprentissage non calculé : {e}")
 
     log("5/5 Écriture des sorties…")
     sorties.copier_pdfs(transactions)
     xlsx = sorties.ecrire_excel(transactions, orphelins)
     page = sorties.ecrire_html(transactions, orphelins)
+    fichier_apprentissage = apprentissage.ecrire(analyse) if analyse is not None else None
 
     compte = Counter(t["statut"] for t in transactions)
     for statut, n in compte.most_common():
         log(f"    {statut} : {n}")
     log(f"    PDF sans transaction : {len(orphelins)}")
     log(f"\nTerminé.\n  {xlsx}\n  {page}")
-    return {"statuts": dict(compte), "orphelins": len(orphelins), "excel": xlsx, "html": page}
+    return {"statuts": dict(compte), "orphelins": len(orphelins), "excel": xlsx, "html": page,
+            "apprentissage": fichier_apprentissage}
 
 
 def _ligne_de_commande(arguments: list[str] | None = None) -> None:
