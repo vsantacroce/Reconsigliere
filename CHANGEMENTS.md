@@ -12,6 +12,15 @@
 - Filtre par exercice ; boutons pour ouvrir le document source, le classeur et la page lisible.
 - L'onglet Assistant société n'est plus repéré par sa position.
 
+## Documentation vivante (sans changement du programme)
+
+- Nouveau dossier `docs/` : vue d'ensemble avec schéma du flux, une page par module (à quoi il sert, ce qu'il lit, ce qu'il écrit,
+  ce qui casse si on le change), carte des modules, fichiers lus et écrits, journal des décisions, où le programme apprend.
+- `outils/docs.py` régénère la partie automatique de chaque page depuis le code et vérifie que la documentation suit le code.
+- Contrôle GitHub « Documentation » : une modification d'un module sans mise à jour de sa page ne passe pas.
+- `CLAUDE.md` : la règle pour toute session de Claude qui travaille sur le dépôt.
+- 12 tests ajoutés (`tests/test_docs.py`).
+
 ## 0.6.0 — import de documents comptables
 
 - Nouveau dossier `entrees/07_documents` et bouton « Importer les documents » : bilan, compte de résultat,

@@ -16,3 +16,23 @@ Rien.
 - Les noms d'onglets et de colonnes viennent de `importation/sorties.py` (`COLONNES`) : les changer là change ce qui est lu ici.
 - `onglet_documents.py` utilise `Import` (source, exercice, nb_pages, methodes, etat, chemin_source, html,
   resume_sections), `charger`, `exercices`, `vue` et `arbre`.
+
+## Dépendances (automatique)
+
+<!-- debut-auto -->
+_Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
+
+- **Fichier :** `src/reconsigliere/importation/catalogue.py` (230 lignes)
+- **Dépend de :** [importation.classement](classement.md), [importation.sorties](sorties.md), [outils](../outils.md)
+- **Utilisé par :** [onglet_documents](../onglet_documents.md)
+- **Bibliothèques externes :** openpyxl
+
+Fonctions et classes publiques :
+
+- `Import`
+- `plage` : [3, 4, 5, 8] → « p.3–5, 8 ».
+- `charger`
+- `exercices`
+- `vue` : Sources, contrôles et lignes d'un type de document, pour un exercice (None = tous).
+- `arbre` : Bilan ou compte de résultat en arbre : rubrique › sous-rubrique › ligne.
+<!-- fin-auto -->

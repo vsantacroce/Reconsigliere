@@ -1,0 +1,23 @@
+# Journal des décisions
+
+Chaque choix qui n'est pas évident en lisant le code, avec sa raison. Une décision remplacée n'est pas effacée :
+elle est marquée « remplacée par Dn ». Ajouter une entrée à chaque nouveau choix de ce genre.
+
+| N° | Date | Décision | Pourquoi | Où |
+|---|---|---|---|---|
+| D1 | 26.11.2026 | Aucune pièce comptable réelle dans le dépôt ; `entrees/` et `sorties/` exclus de Git, tests sur données fictives. | Données bancaires et personnelles ; le dépôt est sur GitHub. | `.gitignore`, `tests/` |
+| D2 | 26.11.2026 | Score de rapprochement sur 100 : montant 50 (+5 total), date 20/12/5, IBAN 25, référence 25, partenaire 20 ; sûr ≥ 60, à confirmer ≥ 40. | Le montant seul ne suffit pas (montants ronds fréquents) ; un deuxième indice est exigé pour « sûr ». | [rapprochement](modules/rapprochement.md), [config](modules/config.md) |
+| D3 | 26.11.2026 | Un PDF ne va qu'à une transaction, meilleurs scores d'abord. | Évite qu'une facture justifie deux paiements. Limite connue : facture payée en plusieurs fois. | [rapprochement](modules/rapprochement.md) |
+| D4 | 26.11.2026 | Tes corrections passent toujours avant l'automatique. | Le programme propose, la personne décide. | [corrections](modules/corrections.md) |
+| D5 | 26.11.2026 | Dossier de travail séparé du code et mémorisé. | Mettre à jour ou désinstaller le programme ne touche jamais aux données. | [installation](modules/installation.md) |
+| D6 | 26.11.2026 | Mise à jour automatique depuis le dernier commit de `main` à chaque ouverture. | Pas de manipulation sous Windows ; en contrepartie, tout ce qui est fusionné dans `main` arrive chez l'utilisateur. | [windows.demarrer](modules/windows/demarrer.md) |
+| D7 | 26.11.2026 | Le classeur des brevets est lu tel qu'il est tenu, sans ressaisie. | Une seule source de vérité, tenue dans Excel. | [societe](modules/societe.md) |
+| D8 | 26.11.2026 | Un référentiel par exercice ; validé = lecture seule + empreinte SHA-256 ; réouverture avec motif obligatoire. | Un exercice clôturé ne doit pas changer en silence ; toute modification laisse une trace. | [exercices](modules/exercices.md) |
+| D9 | 26.11.2026 | Compte habituel d'un partenaire = compte le plus fréquent dans le grand livre, hors 10xx, 110x, 117x, 200x, 220x. | Les comptes de banque, de tiers et de TVA ne disent rien de la nature de la dépense. | [exercices](modules/exercices.md) |
+| D10 | 26.11.2026 | Exercice = année civile (date de l'écriture ou de la transaction). | Exercice de la société aligné sur l'année civile. À revoir si ce n'est plus le cas. | [exercices](modules/exercices.md), [importation.pipeline](modules/importation/pipeline.md) |
+| D11 | 26.11.2026 | Import : règles locales d'abord, passe de continuité, IA seulement sur un extrait court des pages indécises, choix manuel sans clé. | Coût en tokens minimal et données envoyées réduites au strict nécessaire. | [importation.classement](modules/importation/classement.md), [importation.ia](modules/importation/ia.md) |
+| D12 | 26.11.2026 | Modèle d'IA réglable, Haiku par défaut, banc de comparaison avec Sonnet. | Doute sur la justesse de Haiku : à mesurer avec une vraie clé avant de trancher. | [importation.ia](modules/importation/ia.md), [importation.banc](modules/importation/banc.md) |
+| D13 | 26.11.2026 | Format normalisé commun import → Assistant société (onglets et colonnes fixés), écrit dans `imports/AAAA`, jamais dans `exercices/AAAA`. | Deux parties développées séparément doivent se comprendre ; les référentiels versionnés ne sont écrits que par `exercices`. | [donnees.md](donnees.md) |
+| D14 | 26.11.2026 | Grand livre en PDF : partenaire séparé du libellé seulement sur « Partenaire - libellé », sinon vide. | Un partenaire deviné fausserait le compte habituel (D9). L'export Excel du grand livre avec colonne Partenaire reste la source fiable. | [importation.extracteurs](modules/importation/extracteurs.md) |
+| D15 | 26.11.2026 | Documentation vivante : une page par module, partie générée depuis le code, contrôle GitHub qui exige la mise à jour de la page de tout module modifié. | Pouvoir revenir sur le programme et comprendre les implications d'un changement sans dépendre de la mémoire de quiconque. | [README](README.md), `outils/docs.py` |
+| D16 | 26.11.2026 | Onglet Documents : la fenêtre relit les classeurs de `entrees/06_societe/imports/AAAA` au lieu de garder sa propre copie ; pas de reclassement manuel d'une page dans cette version. | Ce que V voit est exactement ce qui alimente l'exercice ; une seule source évite les écarts. Reclassement demandé plus tard si besoin. | [onglet_documents](modules/onglet_documents.md), [importation.catalogue](modules/importation/catalogue.md) |

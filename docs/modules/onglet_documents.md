@@ -16,3 +16,19 @@ Rien. Il ouvre les fichiers (document source, classeur, page lisible) avec le pr
 - `fenetre.py` appelle `construire(parent, fenetre)` et s'attend à `fenetre.btn_importer` créé ici, ainsi qu'à
   `actualiser()` et `lbl_etat` sur l'objet renvoyé.
 - Il utilise `fenetre._importer`, `fenetre._reglages_ia`, `fenetre._ouvrir` et `fenetre.dossier`.
+
+## Dépendances (automatique)
+
+<!-- debut-auto -->
+_Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
+
+- **Fichier :** `src/reconsigliere/onglet_documents.py` (234 lignes)
+- **Dépend de :** [importation.catalogue](importation/catalogue.md), [importation.classement](importation/classement.md)
+- **Utilisé par :** [fenetre](fenetre.md)
+- **Bibliothèques externes :** aucune
+
+Fonctions et classes publiques :
+
+- `OngletDocuments`
+- `construire`
+<!-- fin-auto -->
