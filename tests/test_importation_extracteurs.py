@@ -102,9 +102,11 @@ class TestEtats(unittest.TestCase):
         self.assertEqual(b[2]["rubrique"], "Passifs")
 
     def test_compte_resultat_signe_garde(self):
-        s = section("compte_resultat", ["Compte de résultat 2024", "Charges", "6000 Loyer -12'000.00"])
+        s = section("compte_resultat", ["Compte de résultat 2024", "Charges", "6000 Loyer -12'000.00",
+                                        "Résultat de l'exercice -12'000.00"])
         r = extracteurs.extraire(s, 2024, "r.pdf")["compteresultat"]
         self.assertEqual(r[0]["montant"], -12000.0)
+        self.assertEqual((r[1]["niveau"], r[1]["rubrique"]), (1, ""))
         self.assertIsNone(r[0]["colonne_exercice_precedent"])
 
     def test_annexe_texte(self):

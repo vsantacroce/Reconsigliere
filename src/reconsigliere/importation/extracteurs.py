@@ -263,6 +263,8 @@ def _etat(section: Section, exercice: int, fichier: str) -> list[dict]:
                 continue
             if code:
                 niveau = 3
+            elif n.startswith(("resultat", "benefice", "perte de l'exercice", "total du bilan")):
+                niveau, rub1, rub2 = 1, "", ""
             elif n.startswith("total") and any(re.search(rf"\b{m}\b", n) for m in MOTS_NIVEAU_1):
                 niveau = 1
             else:

@@ -85,6 +85,37 @@ Dans `mes_corrections.xlsx` :
 
 Tes corrections passent toujours avant le rapprochement automatique.
 
+## Import de documents comptables
+
+Dépose un bilan, un compte de résultat, un grand livre, un plan comptable ou une annexe dans
+`entrees/07_documents` (PDF, photo ou Excel ; un même PDF peut tout contenir), puis clique sur
+« Importer les documents » ou lance `python -m reconsigliere importer`.
+
+1. Chaque page (ou feuille Excel) est lue : texte du PDF, Tesseract pour les photos et les scans.
+2. Chaque page est classée par des règles locales : titres, mots-clés, en-têtes de colonnes.
+3. Une passe de continuité rattache les pages sans titre à la section en cours (report de solde,
+   mêmes en-têtes, « Page 2/12 », lignes d'écritures datées).
+4. Les seules pages encore indécises vont à l'IA, avec un extrait de 2000 caractères au plus.
+   Sans clé API, la fenêtre te les montre et tu choisis le type.
+5. Chaque section passe dans son extracteur, puis des contrôles vérifient le résultat :
+   grand livre équilibré, actifs = passifs, pages illisibles ou à vérifier.
+
+Résultats : un classeur normalisé par document dans `entrees/06_societe/imports/AAAA`
+(onglets `meta`, `pages`, `controles`, `plancomptable`, `grandlivre`, `bilan`, `compteresultat`,
+`annexe`), lu par l'Assistant société, et une page lisible dans `sorties/imports`.
+Un document déjà importé (même contenu) n'est pas réimporté, sauf avec `--forcer`.
+
+Le partenaire de chaque écriture n'est fiable que depuis un export Excel du grand livre : dans un PDF,
+il reste dans le libellé.
+
+### IA
+
+- Clé et modèle : bouton « Réglages IA… », ou variables `ANTHROPIC_API_KEY` et `RECONSIGLIERE_MODELE`.
+- Modèle `haiku` (par défaut, le moins cher) ou `sonnet`.
+- `python -m reconsigliere banc-ia` fait classer 12 pages ambiguës fictives par les deux modèles et
+  affiche le nombre de bonnes réponses, les tokens et le coût de chacun.
+- `python -m reconsigliere importer --sans-ia` n'appelle jamais l'IA.
+
 ## Images et scans
 
 Les PNG, JPG et PDF scannés ne contiennent pas de texte lisible directement.

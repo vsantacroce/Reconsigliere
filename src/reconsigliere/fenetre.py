@@ -126,6 +126,12 @@ class Fenetre:
         self.btn_lancer = ttk.Button(haut, text="▶  Lancer la réconciliation", style="Grand.TButton",
                                      command=self._lancer)
         self.btn_lancer.pack(side="left")
+        bas_boutons = ttk.Frame(s3)
+        bas_boutons.pack(fill="x", pady=(8, 0))
+        self.btn_importer = ttk.Button(bas_boutons, text="Importer les documents (bilan, grand livre…)",
+                                       command=self._importer)
+        self.btn_importer.pack(side="left")
+        ttk.Button(bas_boutons, text="Réglages IA…", command=self._reglages_ia).pack(side="left", padx=(6, 0))
         droite = ttk.Frame(haut)
         droite.pack(side="left", fill="x", expand=True, padx=(14, 0))
         self.lbl_etape = ttk.Label(droite, text="Prêt.", style="Doux.TLabel")
@@ -156,6 +162,8 @@ class Fenetre:
             "xlsx": ("Rapport (Excel)", lambda d: d / "sorties" / "reconciliation.xlsx"),
             "a_compta": ("Pièces à comptabiliser", lambda d: d / "sorties" / "a_comptabiliser"),
             "renommes": ("Toutes les pièces renommées", lambda d: d / "sorties" / "pdf_renommes"),
+            "imports": ("Documents importés", lambda d: d / "sorties" / "imports"),
+            "classeurs": ("Classeurs importés", lambda d: d / "entrees" / "06_societe" / "imports"),
             "corrections": ("Mes corrections", lambda d: d / "entrees" / "05_mes_corrections" / "mes_corrections.xlsx"),
         }
         self.widgets_resultats: dict[str, ttk.Button] = {}
@@ -222,6 +230,7 @@ class Fenetre:
             else "Choisis un emplacement : les dossiers d'entrée et de sortie y seront créés.")
         etat = "!disabled" if pret and not self.en_cours else "disabled"
         self.btn_lancer.state([etat])
+        self.btn_importer.state([etat])
         self.btn_ouvrir_dossier.state(["!disabled" if pret else "disabled"])
         for b in self.boutons_dossiers:
             b.state(["!disabled" if pret else "disabled"])
@@ -299,6 +308,12 @@ class Fenetre:
                         self.lbl_etape.configure(text=f"Étape {etape.group(1)} sur {NB_ETAPES} : {etape.group(2)}")
                 elif genre == "fin":
                     self._terminer(contenu)
+                elif genre == "fin_import":
+                    self._terminer_import(contenu)
+                elif genre == "choix":
+                    page, proposition, reponse, evenement = contenu
+                    reponse["type"] = self._demander_type(page, proposition)
+                    evenement.set()
                 elif genre == "erreur":
                     self.en_cours = False
                     self.lbl_etape.configure(text="Arrêté sur une erreur.")
@@ -320,6 +335,113 @@ class Fenetre:
         self.lbl_resume.configure(
             text=f"{total} transaction(s). {details}. PDF sans transaction : {resultat.get('orphelins', 0)}.")
         self._actualiser()
+
+
+    # ------------------------------------------------------------ import de documents
+
+    def _importer(self) -> None:
+        if self.en_cours or self.dossier is None:
+            return
+        if installation.compter_fichiers(self.dossier / "entrees" / "07_documents") == 0:
+            messagebox.showwarning(
+                TITRE, "Le dossier « Documents à importer » est vide.\n\n"
+                       "Dépose un bilan, un grand livre, un plan comptable… (PDF, photo ou Excel), puis relance.",
+                parent=self.tk)
+            return
+        self.en_cours = True
+        self.progression.configure(mode="indeterminate")
+        self.progression.start(12)
+        self.lbl_etape.configure(text="Import des documents…")
+        self._actualiser()
+        threading.Thread(target=self._traiter_import, daemon=True).start()
+
+    def _choisir_type(self, page, proposition):
+        """Appelé depuis le fil de travail : la question est posée par la fenêtre, puis on attend."""
+        reponse, evenement = {}, threading.Event()
+        self.messages.put(("choix", (page, proposition, reponse, evenement)))
+        evenement.wait()
+        return reponse.get("type")
+
+    def _traiter_import(self) -> None:
+        from .importation import pipeline
+        try:
+            resultats = pipeline.importer_dossier(self.dossier, choisir=self._choisir_type,
+                                                  log=lambda texte: self.messages.put(("log", texte)))
+            self.messages.put(("fin_import", resultats))
+        except PermissionError as e:
+            self.messages.put(("erreur", "Un fichier est ouvert dans un autre programme, probablement Excel.\n"
+                                         f"Ferme-le puis relance.\n\nDétail : {e.filename or e}"))
+        except Exception:  # noqa: BLE001
+            self.messages.put(("erreur", traceback.format_exc()))
+
+    def _demander_type(self, page, proposition) -> str | None:
+        from .importation.classement import LIBELLES
+        fenetre = tk.Toplevel(self.tk)
+        fenetre.title(f"{TITRE} : page {page.numero} à classer")
+        fenetre.transient(self.tk)
+        fenetre.grab_set()
+        cadre = ttk.Frame(fenetre, padding=12)
+        cadre.pack(fill="both", expand=True)
+        ttk.Label(cadre, wraplength=520,
+                  text=f"Je n'ai pas reconnu la page {page.numero}. Que contient-elle ?").pack(anchor="w")
+        apercu = tk.Text(cadre, height=14, width=80, wrap="word", relief="flat", background="#f6f7f9")
+        apercu.insert("1.0", page.texte[:1500])
+        apercu.configure(state="disabled")
+        apercu.pack(fill="both", expand=True, pady=8)
+        choix = tk.StringVar(value=LIBELLES.get(proposition or "autre", "Autre"))
+        ttk.Combobox(cadre, textvariable=choix, values=list(LIBELLES.values()), state="readonly").pack(anchor="w")
+        resultat = {"type": None}
+
+        def valider():
+            resultat["type"] = next(k for k, v in LIBELLES.items() if v == choix.get())
+            fenetre.destroy()
+        boutons = ttk.Frame(cadre)
+        boutons.pack(anchor="e", pady=(10, 0))
+        ttk.Button(boutons, text="Passer", command=fenetre.destroy).pack(side="left", padx=(0, 6))
+        ttk.Button(boutons, text="Valider", command=valider).pack(side="left")
+        self.tk.wait_window(fenetre)
+        return resultat["type"]
+
+    def _terminer_import(self, resultats: list[dict]) -> None:
+        self.en_cours = False
+        self.progression.stop()
+        self.progression.configure(mode="determinate", value=NB_ETAPES)
+        self.lbl_etape.configure(text="Import terminé.")
+        if not resultats:
+            texte = "Aucun nouveau document : ceux du dossier ont déjà été importés."
+        else:
+            alertes = sum(1 for r in resultats for c in r["controles"] if c["resultat"] != "ok")
+            ia_pages = sum(r["appels_ia"] for r in resultats)
+            texte = (f"{len(resultats)} document(s) importé(s). Pages envoyées à l'IA : {ia_pages}. "
+                     f"Points à vérifier : {alertes}. Le détail est dans « Documents importés ».")
+        self.lbl_resume.configure(text=texte)
+        self._actualiser()
+
+    def _reglages_ia(self) -> None:
+        from .importation import ia
+        reglages = installation.lire_reglages()
+        fenetre = tk.Toplevel(self.tk)
+        fenetre.title(f"{TITRE} : réglages IA")
+        fenetre.transient(self.tk)
+        fenetre.grab_set()
+        cadre = ttk.Frame(fenetre, padding=12)
+        cadre.pack(fill="both", expand=True)
+        ttk.Label(cadre, wraplength=460, text=(
+            "L'IA ne sert qu'aux pages que Reconsigliere n'a pas reconnues seul. Elle reçoit un extrait "
+            "de 2000 caractères au plus. Sans clé, ces pages te sont demandées.")).grid(row=0, column=0, columnspan=2, sticky="w")
+        ttk.Label(cadre, text="Clé API Anthropic").grid(row=1, column=0, sticky="w", pady=(10, 0))
+        cle = tk.StringVar(value=reglages.get("cle_api_anthropic", ""))
+        ttk.Entry(cadre, textvariable=cle, show="•", width=46).grid(row=1, column=1, sticky="w", pady=(10, 0))
+        ttk.Label(cadre, text="Modèle").grid(row=2, column=0, sticky="w", pady=(6, 0))
+        modele = tk.StringVar(value=reglages.get("modele_ia", ia.MODELE_DEFAUT))
+        ttk.Combobox(cadre, textvariable=modele, values=list(ia.MODELES), state="readonly",
+                     width=12).grid(row=2, column=1, sticky="w", pady=(6, 0))
+
+        def enregistrer():
+            installation.ecrire_reglage("cle_api_anthropic", cle.get().strip())
+            installation.ecrire_reglage("modele_ia", modele.get())
+            fenetre.destroy()
+        ttk.Button(cadre, text="Enregistrer", command=enregistrer).grid(row=3, column=1, sticky="e", pady=(12, 0))
 
 
 def _nettete_windows() -> None:

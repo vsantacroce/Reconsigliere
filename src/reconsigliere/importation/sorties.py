@@ -24,7 +24,7 @@ COLONNES = {
     "annexe": ["page", "texte", "source"],
 }
 TITRES = {"plancomptable": "Plan comptable", "grandlivre": "Grand livre", "bilan": "Bilan",
-          "compteresultat": "Compte de résultat", "annexe": "Annexe"}
+          "compteresultat": "Compte de résultat", "annexe": "Annexe et autres pages"}
 METHODES = {"regles": "règles locales", "continuite": "suite de la page précédente", "ia": "IA",
             "manuel": "choix manuel", "a_verifier": "à vérifier", "illisible": "illisible"}
 
@@ -73,7 +73,8 @@ def _tableau(lignes: list[dict], colonnes: list[str], max_lignes: int = 500) -> 
             if c in num:
                 cellules.append(f'<td class="n">{_montant(v)}</td>')
             else:
-                cellules.append(f"<td>{html.escape('' if v is None else str(v))}</td>")
+                classe_td = ' class="texte"' if c == "texte" else ""
+                cellules.append(f"<td{classe_td}>{html.escape('' if v is None else str(v))}</td>")
         classe = f' class="niv{l.get("niveau")}"' if l.get("niveau") else ""
         corps.append(f"<tr{classe}>{''.join(cellules)}</tr>")
     reste = f"<p class='note'>… {len(lignes) - max_lignes} ligne(s) de plus dans le classeur.</p>" \
@@ -110,7 +111,7 @@ body {{ font-family: "Segoe UI", system-ui, sans-serif; background:var(--fond); 
 h1 {{ font-size:1.4rem; }} h2 {{ font-size:1.1rem; color:var(--accent); margin-top:2rem; }} small {{ font-weight:normal; opacity:.7; }}
 table {{ border-collapse:collapse; width:100%; font-size:.85rem; display:block; overflow-x:auto; }}
 th, td {{ border-bottom:1px solid var(--bord); padding:4px 8px; text-align:left; white-space:nowrap; }}
-td.n {{ text-align:right; font-variant-numeric:tabular-nums; }} tr.niv1 td {{ font-weight:600; }}
+td.texte {{ white-space:normal; min-width:320px; }} td.n {{ text-align:right; font-variant-numeric:tabular-nums; }} tr.niv1 td {{ font-weight:600; }}
 li.ok {{ color:var(--ok); }} li.ecart {{ color:var(--ko); }} .m-ia, .m-manuel, .m-a_verifier, .m-illisible {{ color:var(--ko); }}
 .resume {{ display:flex; gap:24px; flex-wrap:wrap; }} .note {{ opacity:.7; }}
 </style></head><body>

@@ -1,5 +1,17 @@
 # Changements
 
+## 0.5.0 — import de documents comptables
+
+- Nouveau dossier `entrees/07_documents` et bouton « Importer les documents » : bilan, compte de résultat,
+  grand livre, plan comptable, annexe, en PDF, photo ou Excel, plusieurs états dans un même document.
+- Classement page par page par règles locales, passe de continuité, IA seulement pour les pages indécises
+  (extrait court, Haiku par défaut, Sonnet en option), choix manuel sans clé.
+- Classeur normalisé par document dans `entrees/06_societe/imports/AAAA` pour l'Assistant société,
+  page lisible dans `sorties/imports`, contrôles (grand livre équilibré, actifs = passifs).
+- `python -m reconsigliere importer` et `python -m reconsigliere banc-ia` (comparaison Haiku / Sonnet).
+- Les dates AAAA-MM-JJ ne sont plus lues avec le jour et le mois inversés.
+- Les réglages (dossier, clé API, modèle) sont conservés ensemble.
+
 ## 0.3.0 — installé une fois, mis à jour tout seul
 
 - `installer.ps1` : installation Windows en une commande PowerShell, sans droits administrateur. Installe Python 3.12 si besoin (winget, sinon python.org), télécharge le programme dans `%LOCALAPPDATA%\Reconsigliere`, installe les bibliothèques dans un environnement isolé, crée les icônes du bureau et du menu Démarrer.
