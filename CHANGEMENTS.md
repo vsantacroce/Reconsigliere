@@ -1,5 +1,13 @@
 # Changements
 
+## 0.3.0 — installé une fois, mis à jour tout seul
+
+- `installer.ps1` : installation Windows en une commande PowerShell, sans droits administrateur. Installe Python 3.12 si besoin (winget, sinon python.org), télécharge le programme dans `%LOCALAPPDATA%\Reconsigliere`, installe les bibliothèques dans un environnement isolé, crée les icônes du bureau et du menu Démarrer.
+- `windows/demarrer.pyw` : lancé par l'icône. À chaque ouverture, il compare la version installée au dernier commit de `main` sur GitHub, télécharge la nouvelle version si besoin, réinstalle les bibliothèques si `requirements.txt` a changé, puis ouvre la fenêtre. Hors ligne, la version installée s'ouvre.
+- `windows/desinstaller.ps1` : retire le programme et les icônes, garde le dossier de travail.
+- Icône Reconsigliere pour la fenêtre, le bureau et le menu Démarrer.
+- La fenêtre affiche le commit installé.
+
 ## 0.2.1 — nouveau nom : Reconsigliere
 
 - Le logiciel s'appelle Reconsigliere partout : fenêtre, rapport HTML, README, dossier du programme.

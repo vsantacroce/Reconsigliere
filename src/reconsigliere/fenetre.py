@@ -5,6 +5,7 @@ Lancement : Reconsigliere.bat (Windows), reconsigliere.sh (Ubuntu) ou python -m 
 
 from __future__ import annotations
 
+import os
 import queue
 import re
 import sys
@@ -28,6 +29,7 @@ class Fenetre:
         self.en_cours = False
 
         racine_tk.title(f"{TITRE} — réconciliation bancaire")
+        self._icone()
         racine_tk.minsize(820, 720)
         racine_tk.geometry("900x800")
         self._style()
@@ -44,6 +46,17 @@ class Fenetre:
         racine_tk.after(100, self._lire_messages)
 
     # ------------------------------------------------------------ construction
+
+    def _icone(self) -> None:
+        dossier = Path(__file__).resolve().parents[2] / "windows"
+        try:
+            if sys.platform.startswith("win") and (dossier / "reconsigliere.ico").exists():
+                self.tk.iconbitmap(default=str(dossier / "reconsigliere.ico"))
+            elif (dossier / "reconsigliere.png").exists():
+                self._image_icone = tk.PhotoImage(file=str(dossier / "reconsigliere.png"))
+                self.tk.iconphoto(True, self._image_icone)
+        except tk.TclError:
+            pass
 
     def _style(self) -> None:
         style = ttk.Style(self.tk)
@@ -151,7 +164,9 @@ class Fenetre:
             b.pack(side="left", padx=(0, 6))
             self.widgets_resultats[cle] = b
 
-        ttk.Label(principal, text=f"Version {__version__} · tes fichiers restent sur cet ordinateur.",
+        commit = os.environ.get("RECONSIGLIERE_COMMIT", "")
+        version = f"Version {__version__}" + (f" ({commit}, mise à jour automatique)" if commit else "")
+        ttk.Label(principal, text=f"{version} · tes fichiers restent sur cet ordinateur.",
                   style="Doux.TLabel").pack(anchor="e")
 
     # ------------------------------------------------------------ dossier de travail

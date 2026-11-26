@@ -5,14 +5,27 @@
 Réconcilie les transactions bancaires avec les pièces PDF et la comptabilité.
 L'outil retrouve le partenaire de chaque transaction, y attache le bon PDF, le renomme de façon logique et isole ce qui manque encore dans la comptabilité.
 
-## Installation sur Windows
+## Installation sur Windows (une seule fois)
 
-1. Installe Python 3.12 depuis https://www.python.org/downloads/ en cochant « Add python.exe to PATH ».
-   Ou, dans un terminal : `winget install --id Python.Python.3.12 -e`.
-2. Décompresse ce dossier où tu veux, par exemple dans `Documents`.
-3. Double-clique sur `Reconsigliere.bat`. Le premier lancement installe les bibliothèques (une minute), puis la fenêtre s'ouvre.
+1. Ouvre le menu Démarrer, tape `PowerShell` et ouvre « Windows PowerShell ».
+2. Colle cette ligne puis appuie sur Entrée :
 
-Sous Ubuntu : `sudo apt install python3-tk python3-venv` une fois, puis `./reconsigliere.sh`.
+   ```powershell
+   irm https://raw.githubusercontent.com/vsantacroce/reconsigliere/main/installer.ps1 | iex
+   ```
+
+3. Attends la fin (deux à cinq minutes la première fois). Reconsigliere s'ouvre tout seul.
+
+Ensuite, double-clique sur l'icône **Reconsigliere** du bureau ou du menu Démarrer.
+À chaque ouverture, Reconsigliere vérifie sur GitHub s'il existe une nouvelle version et l'installe tout seul.
+Sans internet, la version déjà installée s'ouvre.
+
+- Le programme est installé dans `%LOCALAPPDATA%\Reconsigliere`, sans droits administrateur.
+- Tes relevés, factures et résultats restent dans ton dossier de travail (`Documents\Reconsigliere` par défaut). Ni la mise à jour ni la désinstallation n'y touchent.
+- Pour désinstaller : menu Démarrer › Reconsigliere › Désinstaller Reconsigliere.
+- En cas de souci de mise à jour, le détail est dans `%LOCALAPPDATA%\Reconsigliere\journal.txt`.
+
+Pour développer, sans installation : `Reconsigliere.bat` (Windows) ou `./reconsigliere.sh` (Ubuntu, après `sudo apt install python3-tk python3-venv`) lancent la fenêtre depuis ce dossier.
 
 ## Utilisation avec la fenêtre
 
