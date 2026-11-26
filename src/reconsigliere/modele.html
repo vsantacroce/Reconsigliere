@@ -43,7 +43,7 @@
   <table>
     <thead><tr>
       <th data-c="date">Date</th><th data-c="montant">Montant</th><th data-c="partenaire">Partenaire</th>
-      <th data-c="statut">Statut</th><th data-c="pdf_renomme">Pièce</th><th data-c="explication">Explication</th><th data-c="id_transaction">Id</th>
+      <th data-c="statut">Statut</th><th data-c="compte_propose">Compte proposé</th><th data-c="pdf_renomme">Pièce</th><th data-c="explication">Explication</th><th data-c="id_transaction">Id</th>
     </tr></thead>
     <tbody id="corps"></tbody>
   </table>
@@ -75,6 +75,7 @@ function rendre() {
     <td><b>${esc(l.partenaire)}</b><div class="libelle">${esc(l.libelle)}</div></td>
     <td><span class="pastille" style="background:${COULEURS[l.statut]||"var(--gris)"}">${esc(l.statut)}</span>
         ${l.score ? `<div class="doux" style="font-size:11px">score ${l.score} · ${esc(l.raisons)}</div>` : ""}</td>
+    <td>${l.compte_propose ? `${esc(l.compte_propose)}<div class="doux" style="font-size:11px">${esc(l.fiabilite_compte)}</div>` : "—"}</td>
     <td>${l.pdf_renomme ? `<a href="pdf_renommes/${encodeURIComponent(l.pdf_renomme)}" target="_blank">${esc(l.pdf_renomme)}</a><div class="doux" style="font-size:11px">${esc(l.pdf_original)}</div>` : "—"}</td>
     <td>${esc(l.explication)}</td>
     <td><code>${esc(l.id_transaction)}</code></td></tr>`).join("");

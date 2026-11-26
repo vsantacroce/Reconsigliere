@@ -2,6 +2,8 @@
 
 - Fenêtre : Reconsigliere.bat (Windows), reconsigliere.sh (Ubuntu) ou python -m reconsigliere.fenetre
 - Ligne de commande : python -m reconsigliere [--dossier CHEMIN]
+- Import de documents : python -m reconsigliere importer [FICHIER ...] [--sans-ia] [--modele haiku|sonnet]
+- Banc d'essai IA : python -m reconsigliere banc-ia [--modeles haiku sonnet]
 """
 
 from __future__ import annotations
@@ -11,7 +13,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Callable
 
-from . import chargement, config, corrections, installation, pdf_extraction, rapprochement, sorties
+from . import chargement, config, corrections, exercices, installation, pdf_extraction, rapprochement, sorties
 
 
 def main(log: Callable[[str], None] = print) -> dict:
@@ -46,6 +48,12 @@ def main(log: Callable[[str], None] = print) -> dict:
     log("4/5 Rapprochement…")
     rapprochement.reconcilier(transactions, pdfs, compta, pdfs_compta, corr)
     orphelins = rapprochement.pdfs_non_lies(pdfs, transactions)
+    try:
+        n_comptes = exercices.proposer_comptes(transactions)
+        if n_comptes:
+            log(f"    Compte proposé pour {n_comptes} transaction(s), selon le référentiel de leur exercice")
+    except Exception as e:  # noqa: BLE001 - la proposition de compte ne doit jamais bloquer la réconciliation
+        log(f"    Comptes non proposés : {e}")
 
     log("5/5 Écriture des sorties…")
     sorties.copier_pdfs(transactions)
@@ -60,16 +68,47 @@ def main(log: Callable[[str], None] = print) -> dict:
     return {"statuts": dict(compte), "orphelins": len(orphelins), "excel": xlsx, "html": page}
 
 
-def _ligne_de_commande() -> None:
-    parser = argparse.ArgumentParser(prog="reconsigliere")
+def _ligne_de_commande(arguments: list[str] | None = None) -> None:
+    import sys
+    arguments = sys.argv[1:] if arguments is None else arguments
+    commande = arguments[0] if arguments and arguments[0] in ("importer", "banc-ia") else "reconcilier"
+    if commande != "reconcilier":
+        arguments = arguments[1:]
+    parser = argparse.ArgumentParser(prog=f"reconsigliere {commande}".replace(" reconcilier", ""))
     parser.add_argument("--dossier", type=Path,
                         help="dossier de travail qui contient entrees et sorties "
                              "(par défaut : le dossier choisi dans la fenêtre, sinon celui du programme)")
-    args = parser.parse_args()
+    if commande == "importer":
+        parser.add_argument("fichiers", nargs="*", type=Path,
+                            help="documents à importer (par défaut : tout entrees/07_documents)")
+        parser.add_argument("--sans-ia", action="store_true", help="ne jamais appeler l'IA")
+        parser.add_argument("--modele", help="haiku ou sonnet (ou identifiant complet)")
+        parser.add_argument("--forcer", action="store_true", help="réimporter les documents déjà importés")
+    if commande == "banc-ia":
+        parser.add_argument("--modeles", nargs="+", default=["haiku", "sonnet"])
+    args = parser.parse_args(arguments)
     dossier = args.dossier or installation.dossier_memorise()
     if dossier:
         config.definir_racine(dossier)
-    main()
+    if commande == "reconcilier":
+        main()
+        return
+    from .importation import banc, ia, pipeline
+    cle = ia.cle_api()
+    if commande == "banc-ia":
+        if not cle:
+            raise SystemExit("Aucune clé API : définis ANTHROPIC_API_KEY ou enregistre-la dans les réglages IA.")
+        print(banc.rapport(banc.comparer(args.modeles, cle)))
+        return
+    installation.creer_dossiers(config.RACINE)
+    options = {"cle": None if args.sans_ia else cle,
+               "modele_id": ia.MODELES.get(args.modele, args.modele) if args.modele else None}
+    if args.fichiers:
+        for f in args.fichiers:
+            pipeline.importer(f, config.RACINE, **options)
+    else:
+        resultats = pipeline.importer_dossier(config.RACINE, forcer=args.forcer, **options)
+        print(f"{len(resultats)} document(s) importé(s).")
 
 
 if __name__ == "__main__":

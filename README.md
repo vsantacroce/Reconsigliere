@@ -58,6 +58,9 @@ Chemins relatifs au dossier de travail.
 | `entrees/03_infos_bancaires` | Relevés et Excel qui détaillent les transactions |
 | `entrees/04_comptabilite` | Liste Excel des pièces comptabilisées, et leurs PDF dans `pdf` |
 | `entrees/05_mes_corrections` | Ton fichier de corrections, créé au premier lancement |
+| `entrees/06_societe` | Ton classeur des brevets, et `societe.xlsx` (projets, revenus, journal) créé au premier lancement |
+| `entrees/06_societe/imports/AAAA` | Plan comptable et grand livre normalisés de l'exercice AAAA |
+| `entrees/06_societe/exercices/AAAA` | Référentiel versionné de l'exercice, géré par Reconsigliere |
 
 ## Sorties
 
@@ -65,8 +68,40 @@ Chemins relatifs au dossier de travail.
 |---|---|
 | `sorties/reconciliation.xlsx` | Une ligne par transaction, les PDF sans transaction et un résumé |
 | `sorties/reconciliation.html` | La même chose en page interactive, avec recherche, filtres et liens vers les PDF |
+| `sorties/societe.html` | Tableau de bord de la société, recréé par le bouton « Tableau de bord » de l'onglet Assistant société |
 | `sorties/pdf_renommes` | Chaque pièce retrouvée, nommée `AAAA-MM-JJ_Partenaire_Montant_Numero` avec son extension d'origine |
 | `sorties/a_comptabiliser` | Seulement les pièces absentes de la comptabilité |
+
+## État de la société (onglet Assistant société)
+
+L'onglet Assistant société › État de la société montre l'état de la société au jour le jour : familles de brevets et dépôts par pays, coûts capitalisables et en charge, projets capitalisables, sources de revenus et journal.
+
+1. Dépose ton classeur des brevets dans `entrees/06_societe`, tel que tu le tiens déjà.
+   Reconsigliere y reconnaît l'onglet de la liste (colonnes `ID`, `Title`, `Patent number`, `Filing date`, `Approved date`, `Abandon date`, `Patent owner`) et les onglets de coûts (colonnes `Brevet`, `Classification` Capitalisable/Charge, `Montant HT CHF`, `Date facture`).
+   La famille vient de l'identifiant (`PAT01-03` appartient à `PAT01`), le pays du numéro (`WO…`, `EU: EP…`, `CN: …`). Une ligne « EU, CN, US: submitted July 2025 » compte comme entrées annoncées.
+   Un coût qui cite deux familles (« PAT03 + PAT04 ») est regroupé en « à répartir ».
+2. Tiens les onglets `Projets`, `Revenus` et `Journal` de `entrees/06_societe/societe.xlsx`. Le bouton « Ajouter au journal… » y écrit une ligne sans ouvrir Excel.
+3. Le bouton « Tableau de bord (page) » écrit `sorties/societe.html` et l'ouvre.
+
+Les points d'attention signalent les familles abandonnées qui ont encore des coûts capitalisés, les coûts communs à répartir, les pièces marquées comme doublon et les notes datées dans le futur.
+
+Sans fenêtre : `python -m reconsigliere.societe --dossier "C:\Users\moi\Documents\Reconsigliere"`.
+
+## Exercices : référentiel validé et verrouillé chaque année
+
+L'onglet Assistant société › Exercices et changements tient, pour chaque exercice, un référentiel de cinq listes : plan comptable, partenaires et leur compte habituel, brevets, projets, sources de revenus.
+
+1. Dépose le plan comptable et le grand livre normalisés dans `entrees/06_societe/imports/2024` (onglets `PlanComptable` et `GrandLivre`).
+2. « Construire depuis les fichiers… » crée le référentiel 2024. Le compte habituel de chaque partenaire est le compte le plus utilisé avec lui dans le grand livre, sans les comptes de banque, débiteurs, créanciers et TVA. Les brevets sont pris tels qu'ils étaient au 31.12.2024.
+3. Contrôle-le avec « Voir le référentiel (Excel) » (une copie, l'original n'est jamais ouvert), puis « Valider et verrouiller… ». Le fichier passe en lecture seule, son empreinte SHA-256 est enregistrée, et 2025 s'ouvre comme copie de 2024.
+4. Pendant 2025, « Demander un changement… » ajoute, modifie ou retire un élément, avec une date et un motif. Chaque demande reste dans l'onglet `Changements` du référentiel.
+   « Suggestions depuis les fichiers… » montre ce que les fichiers déposés disent de différent (nouveaux dépôts de brevets, abandon, comptes) et applique les lignes choisies comme des demandes.
+5. « Écarts avec l'exercice précédent… » compare 2025 en cours à 2024 validé.
+6. À la clôture, « Valider et verrouiller… » fige 2025 et ouvre 2026.
+
+Un exercice validé ne se modifie plus. « Rouvrir… » le rouvre avec un motif obligatoire, inscrit dans l'historique (`etat.json`). Si le fichier d'un exercice validé est modifié à la main, l'Assistant le signale.
+
+La réconciliation utilise le référentiel de l'exercice de chaque transaction : les rapports Excel et HTML ont une colonne « Compte proposé », avec la part des écritures qui ont utilisé ce compte.
 
 ## Statuts
 
@@ -84,6 +119,37 @@ Dans `mes_corrections.xlsx` :
 - **Feuille transactions** : l'`id_transaction` copié depuis la sortie, puis le partenaire, le PDF à lier, une explication ou un statut forcé (`Comptabilise`, `Sans piece`, `A comptabiliser`, `Ignorer`).
 
 Tes corrections passent toujours avant le rapprochement automatique.
+
+## Import de documents comptables
+
+Dépose un bilan, un compte de résultat, un grand livre, un plan comptable ou une annexe dans
+`entrees/07_documents` (PDF, photo ou Excel ; un même PDF peut tout contenir), puis clique sur
+« Importer les documents » ou lance `python -m reconsigliere importer`.
+
+1. Chaque page (ou feuille Excel) est lue : texte du PDF, Tesseract pour les photos et les scans.
+2. Chaque page est classée par des règles locales : titres, mots-clés, en-têtes de colonnes.
+3. Une passe de continuité rattache les pages sans titre à la section en cours (report de solde,
+   mêmes en-têtes, « Page 2/12 », lignes d'écritures datées).
+4. Les seules pages encore indécises vont à l'IA, avec un extrait de 2000 caractères au plus.
+   Sans clé API, la fenêtre te les montre et tu choisis le type.
+5. Chaque section passe dans son extracteur, puis des contrôles vérifient le résultat :
+   grand livre équilibré, actifs = passifs, pages illisibles ou à vérifier.
+
+Résultats : un classeur normalisé par document dans `entrees/06_societe/imports/AAAA`
+(onglets `meta`, `pages`, `controles`, `plancomptable`, `grandlivre`, `bilan`, `compteresultat`,
+`annexe`), lu par l'Assistant société, et une page lisible dans `sorties/imports`.
+Un document déjà importé (même contenu) n'est pas réimporté, sauf avec `--forcer`.
+
+Le partenaire de chaque écriture n'est fiable que depuis un export Excel du grand livre : dans un PDF,
+il reste dans le libellé.
+
+### IA
+
+- Clé et modèle : bouton « Réglages IA… », ou variables `ANTHROPIC_API_KEY` et `RECONSIGLIERE_MODELE`.
+- Modèle `haiku` (par défaut, le moins cher) ou `sonnet`.
+- `python -m reconsigliere banc-ia` fait classer 12 pages ambiguës fictives par les deux modèles et
+  affiche le nombre de bonnes réponses, les tokens et le coût de chacun.
+- `python -m reconsigliere importer --sans-ia` n'appelle jamais l'IA.
 
 ## Images et scans
 
