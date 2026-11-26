@@ -51,7 +51,14 @@ def en_date(valeur) -> date | None:
         return valeur.date()
     if isinstance(valeur, date):
         return valeur
-    d = pd.to_datetime(str(valeur), dayfirst=True, errors="coerce")
+    texte = str(valeur).strip()
+    iso = re.match(r"^(\d{4})-(\d{2})-(\d{2})", texte)
+    if iso:  # AAAA-MM-JJ : ne pas inverser jour et mois
+        try:
+            return date(int(iso.group(1)), int(iso.group(2)), int(iso.group(3)))
+        except ValueError:
+            return None
+    d = pd.to_datetime(texte, dayfirst=True, errors="coerce")
     return None if pd.isna(d) else d.date()
 
 
