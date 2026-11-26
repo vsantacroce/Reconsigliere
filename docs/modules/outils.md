@@ -4,7 +4,8 @@
 
 Petites fonctions partagées : mettre un texte en minuscules sans accents (`normaliser`), lire un montant écrit à la suisse
 (`en_montant` : `1'234.50`, `1 234,50`, `-12.00`…), lire une date (`en_date` : `31.12.2024`, `2024-12-31`, date Excel),
-fabriquer un nom de fichier sûr (`nom_de_fichier_sur`).
+fabriquer un nom de fichier sûr (`nom_de_fichier_sur`), lire un numéro de compte en texte (`code_compte` : `6600.0` saisi comme
+nombre dans Excel devient `6600`).
 
 ## Ce qu'il lit
 
@@ -24,15 +25,17 @@ les identifiants de transaction.
 - `en_montant` et `en_date` : une erreur de lecture (jour et mois inversés, séparateur de milliers mal compris) se propage dans le
   rapprochement, l'import des documents et les exercices. La 0.6.0 a corrigé l'inversion jour/mois des dates `AAAA-MM-JJ`.
 - `nom_de_fichier_sur` : détermine le nom des PDF renommés et des classeurs importés.
+- `code_compte` : sert à comparer tes corrections de compte entre elles et au référentiel ; le changer peut séparer `6600` et `6600.0`
+  en deux comptes différents dans l'apprentissage.
 
 ## Dépendances (automatique)
 
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/outils.py` (69 lignes)
+- **Fichier :** `src/reconsigliere/outils.py` (79 lignes)
 - **Dépend de :** aucun autre module du programme
-- **Utilisé par :** [chargement](chargement.md), [corrections](corrections.md), [importation.catalogue](importation/catalogue.md), [importation.classement](importation/classement.md), [importation.continuite](importation/continuite.md), [importation.extracteurs](importation/extracteurs.md), [importation.ia](importation/ia.md), [importation.pages](importation/pages.md), [importation.pipeline](importation/pipeline.md), [importation.sorties](importation/sorties.md), [pdf_extraction](pdf_extraction.md), [rapprochement](rapprochement.md), [sorties](sorties.md)
+- **Utilisé par :** [apprentissage](apprentissage.md), [chargement](chargement.md), [corrections](corrections.md), [importation.catalogue](importation/catalogue.md), [importation.classement](importation/classement.md), [importation.continuite](importation/continuite.md), [importation.extracteurs](importation/extracteurs.md), [importation.ia](importation/ia.md), [importation.pages](importation/pages.md), [importation.pipeline](importation/pipeline.md), [importation.sorties](importation/sorties.md), [pdf_extraction](pdf_extraction.md), [rapprochement](rapprochement.md), [sorties](sorties.md)
 - **Bibliothèques externes :** pandas
 
 Fonctions et classes publiques :
@@ -42,4 +45,5 @@ Fonctions et classes publiques :
 - `en_montant` : Convertit 1'234.50, 1 234,50, -89.90 CHF, etc. en nombre.
 - `en_date`
 - `nom_de_fichier_sur` : Rend un texte utilisable dans un nom de fichier Windows.
+- `code_compte` : Numéro de compte en texte : 6600.0 (saisi comme nombre dans Excel) devient « 6600 ».
 <!-- fin-auto -->

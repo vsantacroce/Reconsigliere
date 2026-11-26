@@ -19,6 +19,7 @@ Rien sur le disque. Il fournit aux autres modules :
   `DOSSIER_COMPTABILITE`, `FICHIER_CORRECTIONS`, `DOSSIER_SORTIES`, `DOSSIER_PDF_RENOMMES`, `DOSSIER_A_COMPTABILISER` ;
 - `DEVISE = "CHF"` ;
 - `TOLERANCE_MONTANT = 0.01`, `TOLERANCE_JOURS = 15`, `SEUIL_SUR = 60`, `SEUIL_A_CONFIRMER = 40` ;
+- `SEUIL_REGLE = 3` : corrections identiques de compte avant qu'une règle apprise s'applique seule ([apprentissage](apprentissage.md)) ;
 - `ALIAS_COLONNES` : pour chaque champ (date, montant, débit, crédit, libellé, IBAN, référence, partenaire, fichier, statut),
   les en-têtes de colonnes acceptés ;
 - `CHEMIN_TESSERACT` et `LANGUES_OCR` pour la lecture des images.
@@ -41,9 +42,9 @@ Rien sur le disque. Il fournit aux autres modules :
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/config.py` (61 lignes)
+- **Fichier :** `src/reconsigliere/config.py` (65 lignes)
 - **Dépend de :** aucun autre module du programme
-- **Utilisé par :** [__main__](__main__.md), [chargement](chargement.md), [corrections](corrections.md), [fenetre](fenetre.md), [importation.pages](importation/pages.md), [importation.pipeline](importation/pipeline.md), [pdf_extraction](pdf_extraction.md), [rapprochement](rapprochement.md), [societe](societe.md), [sorties](sorties.md)
+- **Utilisé par :** [__main__](__main__.md), [apprentissage](apprentissage.md), [chargement](chargement.md), [corrections](corrections.md), [fenetre](fenetre.md), [importation.pages](importation/pages.md), [importation.pipeline](importation/pipeline.md), [onglet_apprentissage](onglet_apprentissage.md), [pdf_extraction](pdf_extraction.md), [rapprochement](rapprochement.md), [societe](societe.md), [sorties](sorties.md)
 - **Bibliothèques externes :** aucune
 
 Fonctions et classes publiques :

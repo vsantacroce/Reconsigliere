@@ -2,7 +2,7 @@
 
 ## À quoi il sert
 
-L'interface que tu utilises sous Windows (tkinter, inclus dans Python ; sous Ubuntu il faut `python3-tk`). Trois parties :
+L'interface que tu utilises sous Windows (tkinter, inclus dans Python ; sous Ubuntu il faut `python3-tk`). Quatre parties :
 
 - **Réconciliation** : choix du dossier de travail, compteurs de fichiers par dossier, bouton « Lancer la réconciliation »
   avec barre de progression et journal, boutons d'ouverture des résultats.
@@ -11,6 +11,9 @@ L'interface que tu utilises sous Windows (tkinter, inclus dans Python ; sous Ubu
   choix manuel du type de page).
 - **Assistant société** : sous-onglet « État de la société » (brevets, coûts, projets, revenus, journal, tableau de bord) et
   sous-onglet « Exercices et changements » (construire, voir, valider et verrouiller, rouvrir, demander un changement, écarts, suggestions).
+
+- **Apprentissage** : construit par [onglet_apprentissage](onglet_apprentissage.md) ; règles apprises de tes corrections, alertes,
+  annuler, rétablir, reporter dans l'exercice ouvert.
 
 Les petites fenêtres `Journal`, `Changement` et `Ecarts` sont dans le même fichier.
 
@@ -44,8 +47,8 @@ Rien lui-même : chaque bouton appelle un autre module (réconciliation via [__m
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/fenetre.py` (1050 lignes)
-- **Dépend de :** [__main__](__main__.md), [config](config.md), [exercices](exercices.md), [importation.classement](importation/classement.md), [importation.ia](importation/ia.md), [importation.pipeline](importation/pipeline.md), [installation](installation.md), [onglet_documents](onglet_documents.md), [societe](societe.md)
+- **Fichier :** `src/reconsigliere/fenetre.py` (1057 lignes)
+- **Dépend de :** [__main__](__main__.md), [config](config.md), [exercices](exercices.md), [importation.classement](importation/classement.md), [importation.ia](importation/ia.md), [importation.pipeline](importation/pipeline.md), [installation](installation.md), [onglet_apprentissage](onglet_apprentissage.md), [onglet_documents](onglet_documents.md), [societe](societe.md)
 - **Utilisé par :** aucun module (point d'entrée)
 - **Bibliothèques externes :** aucune
 

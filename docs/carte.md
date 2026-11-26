@@ -7,12 +7,14 @@ Une flèche A → B veut dire « A utilise B » : changer B peut changer le comp
 ```mermaid
 flowchart LR
   m___main__["__main__"]
+  m_apprentissage["apprentissage"]
   m_chargement["chargement"]
   m_config["config"]
   m_corrections["corrections"]
   m_exercices["exercices"]
   m_fenetre["fenetre"]
   m_installation["installation"]
+  m_onglet_apprentissage["onglet_apprentissage"]
   m_onglet_documents["onglet_documents"]
   m_outils["outils"]
   m_pdf_extraction["pdf_extraction"]
@@ -33,6 +35,7 @@ flowchart LR
   subgraph windows
   m_windows__demarrer["demarrer"]
   end
+  m___main__ --> m_apprentissage
   m___main__ --> m_chargement
   m___main__ --> m_config
   m___main__ --> m_corrections
@@ -44,6 +47,10 @@ flowchart LR
   m___main__ --> m_pdf_extraction
   m___main__ --> m_rapprochement
   m___main__ --> m_sorties
+  m_apprentissage --> m_config
+  m_apprentissage --> m_exercices
+  m_apprentissage --> m_outils
+  m_apprentissage --> m_rapprochement
   m_chargement --> m_config
   m_chargement --> m_outils
   m_corrections --> m_config
@@ -56,6 +63,7 @@ flowchart LR
   m_fenetre --> m_importation__ia
   m_fenetre --> m_importation__pipeline
   m_fenetre --> m_installation
+  m_fenetre --> m_onglet_apprentissage
   m_fenetre --> m_onglet_documents
   m_fenetre --> m_societe
   m_importation__banc --> m_importation__ia
@@ -87,6 +95,10 @@ flowchart LR
   m_importation__pipeline --> m_outils
   m_importation__sorties --> m_importation__classement
   m_importation__sorties --> m_outils
+  m_onglet_apprentissage --> m_apprentissage
+  m_onglet_apprentissage --> m_config
+  m_onglet_apprentissage --> m_corrections
+  m_onglet_apprentissage --> m_exercices
   m_onglet_documents --> m_importation__catalogue
   m_onglet_documents --> m_importation__classement
   m_pdf_extraction --> m_config
@@ -102,12 +114,13 @@ flowchart LR
 
 | Module | Fichier | Lignes | Utilisé par |
 |---|---|---|---|
-| [__main__](modules/__main__.md) | `src/reconsigliere/__main__.py` | 115 | fenetre |
+| [__main__](modules/__main__.md) | `src/reconsigliere/__main__.py` | 127 | fenetre |
+| [apprentissage](modules/apprentissage.md) | `src/reconsigliere/apprentissage.py` | 474 | __main__, onglet_apprentissage |
 | [chargement](modules/chargement.md) | `src/reconsigliere/chargement.py` | 146 | __main__ |
-| [config](modules/config.md) | `src/reconsigliere/config.py` | 61 | __main__, chargement, corrections, fenetre, importation.pages, importation.pipeline, pdf_extraction, rapprochement, societe, sorties |
-| [corrections](modules/corrections.md) | `src/reconsigliere/corrections.py` | 52 | __main__ |
-| [exercices](modules/exercices.md) | `src/reconsigliere/exercices.py` | 676 | __main__, fenetre |
-| [fenetre](modules/fenetre.md) | `src/reconsigliere/fenetre.py` | 1050 | — |
+| [config](modules/config.md) | `src/reconsigliere/config.py` | 65 | __main__, apprentissage, chargement, corrections, fenetre, importation.pages, importation.pipeline, onglet_apprentissage, pdf_extraction, rapprochement, societe, sorties |
+| [corrections](modules/corrections.md) | `src/reconsigliere/corrections.py` | 104 | __main__, onglet_apprentissage |
+| [exercices](modules/exercices.md) | `src/reconsigliere/exercices.py` | 681 | __main__, apprentissage, fenetre, onglet_apprentissage |
+| [fenetre](modules/fenetre.md) | `src/reconsigliere/fenetre.py` | 1057 | — |
 | [importation.banc](modules/importation/banc.md) | `src/reconsigliere/importation/banc.py` | 67 | __main__ |
 | [importation.catalogue](modules/importation/catalogue.md) | `src/reconsigliere/importation/catalogue.py` | 230 | onglet_documents |
 | [importation.classement](modules/importation/classement.md) | `src/reconsigliere/importation/classement.py` | 107 | fenetre, importation.catalogue, importation.continuite, importation.extracteurs, importation.ia, importation.pipeline, importation.sorties, onglet_documents |
@@ -118,10 +131,11 @@ flowchart LR
 | [importation.pipeline](modules/importation/pipeline.md) | `src/reconsigliere/importation/pipeline.py` | 179 | __main__, fenetre |
 | [importation.sorties](modules/importation/sorties.md) | `src/reconsigliere/importation/sorties.py` | 125 | importation.catalogue, importation.pipeline |
 | [installation](modules/installation.md) | `src/reconsigliere/installation.py` | 148 | __main__, fenetre, importation.ia, societe |
+| [onglet_apprentissage](modules/onglet_apprentissage.md) | `src/reconsigliere/onglet_apprentissage.py` | 208 | fenetre |
 | [onglet_documents](modules/onglet_documents.md) | `src/reconsigliere/onglet_documents.py` | 234 | fenetre |
-| [outils](modules/outils.md) | `src/reconsigliere/outils.py` | 69 | chargement, corrections, importation.catalogue, importation.classement, importation.continuite, importation.extracteurs, importation.ia, importation.pages, importation.pipeline, importation.sorties, pdf_extraction, rapprochement, sorties |
+| [outils](modules/outils.md) | `src/reconsigliere/outils.py` | 79 | apprentissage, chargement, corrections, importation.catalogue, importation.classement, importation.continuite, importation.extracteurs, importation.ia, importation.pages, importation.pipeline, importation.sorties, pdf_extraction, rapprochement, sorties |
 | [pdf_extraction](modules/pdf_extraction.md) | `src/reconsigliere/pdf_extraction.py` | 104 | __main__, importation.pages |
-| [rapprochement](modules/rapprochement.md) | `src/reconsigliere/rapprochement.py` | 159 | __main__, sorties |
+| [rapprochement](modules/rapprochement.md) | `src/reconsigliere/rapprochement.py` | 159 | __main__, apprentissage, sorties |
 | [societe](modules/societe.md) | `src/reconsigliere/societe.py` | 648 | exercices, fenetre |
-| [sorties](modules/sorties.md) | `src/reconsigliere/sorties.py` | 99 | __main__ |
+| [sorties](modules/sorties.md) | `src/reconsigliere/sorties.py` | 100 | __main__ |
 | [windows.demarrer](modules/windows/demarrer.md) | `windows/demarrer.pyw` | 196 | — |
