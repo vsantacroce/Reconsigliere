@@ -14,7 +14,7 @@ Aucun de ces fichiers n'est dans le dépôt GitHub : `.gitignore` exclut `entree
 | `entrees/05_mes_corrections/mes_corrections.xlsx` | Feuilles `partenaires` et `transactions` | [corrections](modules/corrections.md) (modèle), puis toi | [corrections](modules/corrections.md) |
 | `entrees/06_societe/*.xlsx` | Classeur des brevets tel que tenu | toi | [societe](modules/societe.md) |
 | `entrees/06_societe/societe.xlsx` | Onglets `Projets`, `Revenus`, `Journal` | [societe](modules/societe.md) (modèle, journal), toi | [societe](modules/societe.md), [exercices](modules/exercices.md) |
-| `entrees/06_societe/imports/AAAA/*.xlsx` | Classeurs normalisés d'un exercice (format ci-dessous) | [importation.sorties](modules/importation/sorties.md), ou toi | [exercices](modules/exercices.md) |
+| `entrees/06_societe/imports/AAAA/*.xlsx` | Classeurs normalisés d'un exercice (format ci-dessous) | [importation.sorties](modules/importation/sorties.md), ou toi | [exercices](modules/exercices.md), [importation.catalogue](modules/importation/catalogue.md) (onglet Documents, seulement les classeurs avec onglets `meta` et `pages`) |
 | `entrees/06_societe/exercices/AAAA/referentiel.xlsx` | Référentiel de l'exercice | [exercices](modules/exercices.md) seulement | [exercices](modules/exercices.md) |
 | `entrees/06_societe/exercices/AAAA/etat.json` | Statut, empreinte, historique | [exercices](modules/exercices.md) seulement | [exercices](modules/exercices.md) |
 | `entrees/07_documents/` | Documents à importer (PDF, photo, Excel) | toi | [importation.pipeline](modules/importation/pipeline.md) |

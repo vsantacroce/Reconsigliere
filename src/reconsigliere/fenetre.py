@@ -18,6 +18,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from datetime import date
 
 from . import __version__, config, exercices, installation, societe
+from . import onglet_documents as onglet_documents_module
 
 TITRE = "Reconsigliere"
 NB_ETAPES = 5
@@ -89,11 +90,15 @@ class Fenetre:
         self.onglets = ttk.Notebook(principal)
         self.onglets.pack(fill="both", expand=True)
         onglet_reco = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
+        onglet_documents = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
         onglet_assistant = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
+        self.onglet_assistant = onglet_assistant
         self.onglets.add(onglet_reco, text="  Réconciliation  ")
+        self.onglets.add(onglet_documents, text="  Documents  ")
         self.onglets.add(onglet_assistant, text="  Assistant société  ")
-        self.onglets.bind("<<NotebookTabChanged>>", lambda _e: self._actualiser_assistant()
-                          if self.onglets.index("current") == 1 else None)
+        self.onglets.bind("<<NotebookTabChanged>>", lambda _e: self._onglet_change())
+        self.documents_cadre = onglet_documents
+        self.documents = onglet_documents_module.construire(onglet_documents, self)
         self.sous_onglets = ttk.Notebook(onglet_assistant)
         self.sous_onglets.pack(fill="both", expand=True)
         onglet_societe = ttk.Frame(self.sous_onglets, padding=(0, 10, 0, 0))
@@ -147,12 +152,6 @@ class Fenetre:
         self.btn_lancer = ttk.Button(haut, text="▶  Lancer la réconciliation", style="Grand.TButton",
                                      command=self._lancer)
         self.btn_lancer.pack(side="left")
-        bas_boutons = ttk.Frame(s3)
-        bas_boutons.pack(fill="x", pady=(8, 0))
-        self.btn_importer = ttk.Button(bas_boutons, text="Importer les documents (bilan, grand livre…)",
-                                       command=self._importer)
-        self.btn_importer.pack(side="left")
-        ttk.Button(bas_boutons, text="Réglages IA…", command=self._reglages_ia).pack(side="left", padx=(6, 0))
         droite = ttk.Frame(haut)
         droite.pack(side="left", fill="x", expand=True, padx=(14, 0))
         self.lbl_etape = ttk.Label(droite, text="Prêt.", style="Doux.TLabel")
@@ -183,8 +182,6 @@ class Fenetre:
             "xlsx": ("Rapport (Excel)", lambda d: d / "sorties" / "reconciliation.xlsx"),
             "a_compta": ("Pièces à comptabiliser", lambda d: d / "sorties" / "a_comptabiliser"),
             "renommes": ("Toutes les pièces renommées", lambda d: d / "sorties" / "pdf_renommes"),
-            "imports": ("Documents importés", lambda d: d / "sorties" / "imports"),
-            "classeurs": ("Classeurs importés", lambda d: d / "entrees" / "06_societe" / "imports"),
             "corrections": ("Mes corrections", lambda d: d / "entrees" / "05_mes_corrections" / "mes_corrections.xlsx"),
         }
         self.widgets_resultats: dict[str, ttk.Button] = {}
@@ -598,8 +595,7 @@ class Fenetre:
             b.state(["!disabled" if pret else "disabled"])
         for b in self.boutons_exercices:
             b.state(["!disabled" if pret else "disabled"])
-        if pret and self.onglets.index("current") == 1:
-            self._actualiser_assistant()
+        self._onglet_change()
         self._actualiser_compteurs()
 
     def _actualiser_compteurs(self) -> None:
@@ -715,6 +711,7 @@ class Fenetre:
         self.progression.configure(mode="indeterminate")
         self.progression.start(12)
         self.lbl_etape.configure(text="Import des documents…")
+        self.documents.lbl_etat.configure(text="Import en cours… le détail s'affiche dans le journal de l'onglet Réconciliation.")
         self._actualiser()
         threading.Thread(target=self._traiter_import, daemon=True).start()
 
@@ -765,6 +762,16 @@ class Fenetre:
         self.tk.wait_window(fenetre)
         return resultat["type"]
 
+    def _onglet_change(self) -> None:
+        """Actualise l'onglet affiché (repéré par son widget, pas par sa position)."""
+        if self.dossier is None or not hasattr(self, "documents"):
+            return
+        courant = self.onglets.select()
+        if courant == str(self.onglet_assistant):
+            self._actualiser_assistant()
+        elif courant == str(self.documents_cadre):
+            self.documents.actualiser()
+
     def _terminer_import(self, resultats: list[dict]) -> None:
         self.en_cours = False
         self.progression.stop()
@@ -776,9 +783,11 @@ class Fenetre:
             alertes = sum(1 for r in resultats for c in r["controles"] if c["resultat"] != "ok")
             ia_pages = sum(r["appels_ia"] for r in resultats)
             texte = (f"{len(resultats)} document(s) importé(s). Pages envoyées à l'IA : {ia_pages}. "
-                     f"Points à vérifier : {alertes}. Le détail est dans « Documents importés ».")
+                     f"Points à vérifier : {alertes}. Le détail est dans l'onglet Documents.")
         self.lbl_resume.configure(text=texte)
         self._actualiser()
+        self.documents.actualiser()
+        self.documents.lbl_etat.configure(text=texte)
 
     def _reglages_ia(self) -> None:
         from .importation import ia

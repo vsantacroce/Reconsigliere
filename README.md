@@ -135,6 +135,10 @@ Dépose un bilan, un compte de résultat, un grand livre, un plan comptable ou u
 5. Chaque section passe dans son extracteur, puis des contrôles vérifient le résultat :
    grand livre équilibré, actifs = passifs, pages illisibles ou à vérifier.
 
+Tout se suit dans l'onglet « Documents » de la fenêtre : la Vue d'ensemble liste chaque fichier importé
+(exercice, pages, sections trouvées, état), puis un sous-onglet par type montre les sources, les contrôles
+et le tableau obtenu, filtrables par exercice.
+
 Résultats : un classeur normalisé par document dans `entrees/06_societe/imports/AAAA`
 (onglets `meta`, `pages`, `controles`, `plancomptable`, `grandlivre`, `bilan`, `compteresultat`,
 `annexe`), lu par l'Assistant société, et une page lisible dans `sorties/imports`.

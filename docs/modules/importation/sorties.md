@@ -27,7 +27,7 @@ _Partie générée par `python outils/docs.py` à partir du code : ne pas la mod
 
 - **Fichier :** `src/reconsigliere/importation/sorties.py` (125 lignes)
 - **Dépend de :** [importation.classement](classement.md), [outils](../outils.md)
-- **Utilisé par :** [importation.pipeline](pipeline.md)
+- **Utilisé par :** [importation.catalogue](catalogue.md), [importation.pipeline](pipeline.md)
 - **Bibliothèques externes :** pandas
 
 Fonctions et classes publiques :

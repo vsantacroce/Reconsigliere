@@ -1,5 +1,17 @@
 # Changements
 
+## 0.7.0 — onglet Documents
+
+- Nouvel onglet principal « Documents » entre « Réconciliation » et « Assistant société » ; le bouton
+  « Importer les documents » et « Réglages IA… » y déménagent.
+- Vue d'ensemble : chaque fichier importé avec son exercice, ses pages, les sections trouvées
+  (« Bilan p.1 · Grand livre p.3–4 »), comment chaque page a été reconnue et un état ✓ / ⚠.
+- Un sous-onglet par type (Plan comptable, Bilan, Compte de résultat, Grand livre, Annexe, Autres pages) :
+  sources et pages, contrôles (équilibre du grand livre, actifs = passifs, codes en double, lignes sans compte,
+  partenaires lus), tableau du résultat ; bilan et compte de résultat en arbre avec l'exercice précédent.
+- Filtre par exercice ; boutons pour ouvrir le document source, le classeur et la page lisible.
+- L'onglet Assistant société n'est plus repéré par sa position.
+
 ## Documentation vivante (sans changement du programme)
 
 - Nouveau dossier `docs/` : vue d'ensemble avec schéma du flux, une page par module (à quoi il sert, ce qu'il lit, ce qu'il écrit,

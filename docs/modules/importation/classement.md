@@ -30,7 +30,7 @@ _Partie générée par `python outils/docs.py` à partir du code : ne pas la mod
 
 - **Fichier :** `src/reconsigliere/importation/classement.py` (107 lignes)
 - **Dépend de :** [importation.pages](pages.md), [outils](../outils.md)
-- **Utilisé par :** [fenetre](../fenetre.md), [importation.continuite](continuite.md), [importation.extracteurs](extracteurs.md), [importation.ia](ia.md), [importation.pipeline](pipeline.md), [importation.sorties](sorties.md)
+- **Utilisé par :** [fenetre](../fenetre.md), [importation.catalogue](catalogue.md), [importation.continuite](continuite.md), [importation.extracteurs](extracteurs.md), [importation.ia](ia.md), [importation.pipeline](pipeline.md), [importation.sorties](sorties.md), [onglet_documents](../onglet_documents.md)
 - **Bibliothèques externes :** aucune
 
 Fonctions et classes publiques :

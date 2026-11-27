@@ -32,7 +32,7 @@ _Partie générée par `python outils/docs.py` à partir du code : ne pas la mod
 
 - **Fichier :** `src/reconsigliere/outils.py` (69 lignes)
 - **Dépend de :** aucun autre module du programme
-- **Utilisé par :** [chargement](chargement.md), [corrections](corrections.md), [importation.classement](importation/classement.md), [importation.continuite](importation/continuite.md), [importation.extracteurs](importation/extracteurs.md), [importation.ia](importation/ia.md), [importation.pages](importation/pages.md), [importation.pipeline](importation/pipeline.md), [importation.sorties](importation/sorties.md), [pdf_extraction](pdf_extraction.md), [rapprochement](rapprochement.md), [sorties](sorties.md)
+- **Utilisé par :** [chargement](chargement.md), [corrections](corrections.md), [importation.catalogue](importation/catalogue.md), [importation.classement](importation/classement.md), [importation.continuite](importation/continuite.md), [importation.extracteurs](importation/extracteurs.md), [importation.ia](importation/ia.md), [importation.pages](importation/pages.md), [importation.pipeline](importation/pipeline.md), [importation.sorties](importation/sorties.md), [pdf_extraction](pdf_extraction.md), [rapprochement](rapprochement.md), [sorties](sorties.md)
 - **Bibliothèques externes :** pandas
 
 Fonctions et classes publiques :
