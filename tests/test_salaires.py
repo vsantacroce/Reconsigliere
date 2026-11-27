@@ -37,7 +37,8 @@ def vir(employe, jour, montant, exercice=2025, part=None, **autres):
 
 def fiche_lue(virements, du=None, points=None):
     """Fiche telle que rendue par le lecteur : ids remplis, auto = valeurs proposées."""
-    f = {"du": du or [{"employe": "Durand Alice", "net_du": 1000.0, "source": "ANNEE, AX8", "remarque": ""}],
+    f = {"du": du or [{"employe": "Durand Alice", "net_du": 1000.0, "source": "ANNEE, AX8", "remarque": "",
+                       "reste_prec_classeur": 120.5, "note_classeur": "Note de votre classeur (PAYé, juin) : à vérifier"}],
          "virements": [dict(v) for v in virements], "points": points or []}
     fiche.identifiants(f["virements"])
     f["auto"] = fiche.valeurs_auto(f)
@@ -177,6 +178,24 @@ class TestLecture(AvecDossier):
         self.assertEqual(self.lu["du"][0]["net_du"], 38200.00)
         self.assertEqual(self.lu["du"][0]["source"], "ANNEE, AX8")
 
+    def test_reste_prec_selon_frais(self):
+        du = {d["employe"]: d for d in self.lu["du"]}
+        self.assertEqual(du["Durand Alice"]["reste_prec_classeur"], 5000.00)
+        self.assertEqual(du["Rossi Carla"]["reste_prec_classeur"], 290.00)
+        self.assertEqual(du["Meier Bruno"]["reste_prec_classeur"], 0.0)
+
+    def test_sans_onglet_frais(self):
+        chemin = paie_fictive.creer_classeur_paie(self.racine / "sans_frais.xlsx", frais=False)
+        lu = lecture_paie.lire(chemin)
+        self.assertTrue(all(d["reste_prec_classeur"] is None for d in lu["du"]))
+
+    def test_notes_du_classeur(self):
+        du = {d["employe"]: d for d in self.lu["du"]}
+        note = du["Rossi Carla"]["note_classeur"]
+        self.assertIn("Note de votre classeur (PAYé, juin) : le montant 286.17 est faux", note)
+        self.assertIn("(FRAIS, juin) : vérifier ce montant", note)
+        self.assertEqual(du["Meier Bruno"]["note_classeur"], "")
+
     def test_virements_et_ids(self):
         self.assertEqual(len(self.lu["virements"]), len(paie_fictive.VIREMENTS))
         self.assertTrue(all(v["id"] for v in self.lu["virements"]))
@@ -311,6 +330,29 @@ class TestReconciliation(AvecDossier):
         self.assertIsNone(ws["A5"].value)
         points = " ".join(str(c.value) for c in wb["Points à vérifier"]["B"] if c.value)
         self.assertIn("Aucune fiche 2026", points)
+
+    def test_reste_selon_classeur_et_note(self):
+        self.f25["du"][0].update({"reste_prec_classeur": 60.0, "note_classeur": "Note de votre classeur (PAYé, juin) : faux"})
+        r = reconciliation.resume(2025, self.f25, self.f24, self.f26)
+        restes = {x["employe"]: x for x in r["restes_prec"]}
+        self.assertEqual(restes["Durand Alice"]["selon_classeur"], 60.0)
+        self.assertIsNone(restes["Ancien Paul"]["selon_classeur"])
+        textes = " ".join(p["point"] for p in r["points"])
+        self.assertIn("50.00 selon la fiche 2024, 60.00 selon votre classeur (onglet FRAIS)", textes)
+        self.assertIn("Note de votre classeur (PAYé, juin) : faux", textes)
+        wb = openpyxl.load_workbook(reconciliation.ecrire(2025, self.f25, self.f24, self.f26))
+        ws = wb["Synthèse"]
+        ligne = next(c.row for c in ws["A"] if c.value == "Restes 2024 payés en 2025") + 1
+        self.assertEqual([ws.cell(ligne, c).value for c in range(1, 6)],
+                         ["Employé", "Reporté de 2024 (fiche 2024)", "Selon votre classeur (FRAIS)", "Payé en 2025", "Écart"])
+        self.assertTrue(str(ws.cell(ligne + 1, 3).value).startswith("=SUMIFS('Dû 2025'!$E:$E"))
+        self.assertEqual(wb["Dû 2025"]["F5"].value, "Note de votre classeur (PAYé, juin) : faux")
+
+    def test_restes_sans_frais_quatre_colonnes(self):
+        wb = openpyxl.load_workbook(reconciliation.ecrire(2025, self.f25, self.f24, self.f26))
+        ws = wb["Synthèse"]
+        ligne = next(c.row for c in ws["A"] if c.value == "Restes 2024 payés en 2025") + 1
+        self.assertEqual(ws.cell(ligne, 3).value, "Payé en 2025")
 
     def test_points_de_la_fiche_repris(self):
         self.f25["points"] = [{"employe": "Durand Alice", "point": "Point écrit à la main"}]

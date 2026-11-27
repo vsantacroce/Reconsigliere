@@ -17,7 +17,8 @@ from .salaires import fiche, reconciliation
 TITRE = "Salaires"
 COLONNES = [("employe", "Employé", 220), ("du", "Dû", 110), ("paye", "Payé dans l'année", 120),
             ("reporte", "Reporté", 125), ("paye_suivant", "Payé l'année suivante", 125), ("ecart", "Écart", 95)]
-COLONNES_RESTES = [("employe", "Employé", 230), ("reporte", "Reporté", 140), ("paye", "Payé", 125),
+COLONNES_RESTES = [("employe", "Employé", 230), ("reporte", "Reporté", 140),
+                   ("selon", "Selon ton classeur (FRAIS)", 170), ("paye", "Payé", 125),
                    ("ecart", "Écart", 95)]
 
 
@@ -138,7 +139,8 @@ class OngletSalaires:
             self.arbre_restes.heading("reporte", text=f"Reporté de {annee - 1}")
             self.arbre_restes.heading("paye", text=f"Payé en {annee}")
             for x in r["restes_prec"]:
-                self.arbre_restes.insert("", "end", values=[x["employe"], _chf(x["reporte"]), _chf(x["paye"]),
+                self.arbre_restes.insert("", "end", values=[x["employe"], _chf(x["reporte"]), _chf(x["selon_classeur"]),
+                                                            _chf(x["paye"]),
                                                             _chf(x["ecart"])], tags=("ecart",) if x["ecart"] else ())
 
     # ------------------------------------------------------------ boutons

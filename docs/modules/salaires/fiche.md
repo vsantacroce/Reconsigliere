@@ -10,7 +10,7 @@ La fiche existante de l'exercice (onglets `du`, `virements`, `points`, `auto`).
 
 ## Ce qu'il écrit
 
-La fiche de l'exercice. Cases jaunes : ce que tu peux corriger (`net_du`, `exercice`, `part_salaire`, `imputation`) et `preuve`.
+La fiche de l'exercice. Dans la feuille `du`, deux colonnes viennent du classeur de paie et sont remplacées à chaque relecture : `reste_prec_classeur` (reste de l'année précédente selon l'onglet FRAIS, vide si l'onglet manque) et `note_classeur` (tes notes « Nom — Note »). Cases jaunes : ce que tu peux corriger (`net_du`, `exercice`, `part_salaire`, `imputation`) et `preuve`.
 
 ## Ce qui casse si on le change
 
@@ -24,7 +24,7 @@ La fiche de l'exercice. Cases jaunes : ce que tu peux corriger (`net_du`, `exerc
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/salaires/fiche.py` (198 lignes)
+- **Fichier :** `src/reconsigliere/salaires/fiche.py` (200 lignes)
 - **Dépend de :** [config](../config.md)
 - **Utilisé par :** [onglet_salaires](../onglet_salaires.md), [salaires.lecture_paie](lecture_paie.md), [salaires.reconciliation](reconciliation.md)
 - **Bibliothèques externes :** openpyxl

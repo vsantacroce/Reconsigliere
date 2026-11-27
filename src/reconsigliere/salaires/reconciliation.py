@@ -59,6 +59,17 @@ def _du(fiche: dict, employe: str) -> float:
     return _r(sum(d["net_du"] or 0 for d in fiche["du"] if d["employe"] == employe))
 
 
+def _selon_classeur(fiche: dict, employe: str) -> float | None:
+    """Reste de l'année précédente annoncé par le classeur de paie (onglet FRAIS), None s'il n'a pas été lu."""
+    valeurs = [d.get("reste_prec_classeur") for d in fiche["du"] if d["employe"] == employe]
+    valeurs = [v for v in valeurs if v is not None]
+    return _r(sum(valeurs)) if valeurs else None
+
+
+def _frais_lu(fiche: dict) -> bool:
+    return any(d.get("reste_prec_classeur") is not None for d in fiche["du"])
+
+
 def resume(annee: int, fiche_n: dict, fiche_prec: dict | None, fiche_suiv: dict | None) -> dict:
     lignes = []
     for e in _employes(fiche_n):
@@ -71,11 +82,15 @@ def resume(annee: int, fiche_n: dict, fiche_prec: dict | None, fiche_suiv: dict 
     restes = None
     if fiche_prec is not None:
         restes = []
-        for e in _employes(fiche_prec):
+        noms = _employes(fiche_prec) + [d["employe"] for d in fiche_n["du"] if d.get("reste_prec_classeur")
+                                        and d["employe"] not in _employes(fiche_prec)]
+        for e in noms:
             reporte = _r(_du(fiche_prec, e) - _somme(fiche_prec, e, annee - 1))
             paye = _somme(fiche_n, e, annee - 1)
-            if reporte or paye:
-                restes.append({"employe": e, "reporte": reporte, "paye": paye, "ecart": _r(reporte - paye)})
+            selon = _selon_classeur(fiche_n, e)
+            if reporte or paye or selon:
+                restes.append({"employe": e, "reporte": reporte, "selon_classeur": selon, "paye": paye,
+                               "ecart": _r(reporte - paye)})
     r = {"annee": annee, "lignes": lignes, "total": total, "restes_prec": restes}
     r["points"] = points(r, fiche_n, fiche_suiv)
     return r
@@ -101,6 +116,13 @@ def points(r: dict, fiche_n: dict, fiche_suiv: dict | None) -> list[dict]:
             sens = "reste à payer" if x["ecart"] > 0 else "payé en trop"
             out.append({"employe": x["employe"],
                         "point": f"Salaire {annee - 1} : {sens} {_f(abs(x['ecart']))} après les paiements de {annee}."})
+        if _frais_lu(fiche_n) and abs((x["selon_classeur"] or 0) - x["reporte"]) >= 0.005:
+            out.append({"employe": x["employe"], "point": (
+                f"Reste {annee - 1} : {_f(x['reporte'])} selon la fiche {annee - 1}, {_f(x['selon_classeur'] or 0)} "
+                f"selon votre classeur (onglet FRAIS). Vérifier lequel est juste.")})
+    for d in fiche_n["du"]:
+        if d.get("note_classeur"):
+            out.append({"employe": d["employe"], "point": d["note_classeur"]})
     for d in fiche_n["du"]:
         if d.get("remarque", "").startswith("Contrôle"):
             out.append({"employe": d["employe"], "point": d["remarque"]})
@@ -188,12 +210,15 @@ def ecrire(annee: int, fiche_n: dict, fiche_prec: dict | None, fiche_suiv: dict 
 
     du = wb.create_sheet(f"Dû {n}")
     _titre(du, f"Salaire net dû pour l'exercice {n}", "Source : votre classeur de paie, repris dans la fiche de l'exercice.")
-    _entetes(du, 4, ["Employé", f"Net dû {n} (CHF)", "Source (cellule)", "Remarque"], [30, 18, 20, 80])
+    _entetes(du, 4, ["Employé", f"Net dû {n} (CHF)", "Source (cellule)", "Remarque",
+                     f"Reste {prec} selon votre classeur (FRAIS)", "Note de votre classeur"], [30, 18, 20, 60, 20, 80])
     for i, d in enumerate(fiche_n["du"], 5):
-        for c, val in enumerate([d["employe"], d["net_du"], d["source"], d.get("remarque") or None], 1):
+        for c, val in enumerate([d["employe"], d["net_du"], d["source"], d.get("remarque") or None,
+                                 d.get("reste_prec_classeur"), d.get("note_classeur") or None], 1):
             du.cell(i, c, val)
-        du.cell(i, 2).number_format = CHF
-    _total(du, 5 + len(fiche_n["du"]), 5, 4 + len(fiche_n["du"]), (2,), 4)
+        du.cell(i, 2).number_format = du.cell(i, 5).number_format = CHF
+        du.cell(i, 6).alignment = Alignment(wrap_text=True, vertical="top")
+    _total(du, 5 + len(fiche_n["du"]), 5, 4 + len(fiche_n["du"]), (2, 5), 6)
 
     if fiche_prec is not None:
         rp = wb.create_sheet(f"Reste {prec}")
@@ -247,18 +272,27 @@ def ecrire(annee: int, fiche_n: dict, fiche_prec: dict | None, fiche_suiv: dict 
         r += 3
         syn.cell(r, 1, f"Restes {prec} payés en {n}").font = _SOUS_TITRE
         r += 1
-        _entetes(syn, r, ["Employé", f"Reporté de {prec}", f"Payé en {n}", "Écart"])
+        frais = _frais_lu(fiche_n)
+        if frais:
+            _entetes(syn, r, ["Employé", f"Reporté de {prec} (fiche {prec})", "Selon votre classeur (FRAIS)",
+                              f"Payé en {n}", "Écart"])
+        else:
+            _entetes(syn, r, ["Employé", f"Reporté de {prec}", f"Payé en {n}", "Écart"])
         r += 1
         debut = r
+        paye = 4 if frais else 3
         for x in res["restes_prec"]:
             syn.cell(r, 1, x["employe"])
             syn.cell(r, 2, f"=SUMIFS('Reste {prec}'!$D:$D,'Reste {prec}'!$A:$A,$A{r})")
-            syn.cell(r, 3, f"=SUMIFS({pn}!$F:$F,{pn}!$A:$A,$A{r},{pn}!$E:$E,{prec})")
-            syn.cell(r, 4, f"=ROUND(B{r}-C{r},2)")
-            for c in range(2, 5):
+            if frais:
+                syn.cell(r, 3, f"=SUMIFS('Dû {n}'!$E:$E,'Dû {n}'!$A:$A,$A{r})")
+            lp = get_column_letter(paye)
+            syn.cell(r, paye, f"=SUMIFS({pn}!$F:$F,{pn}!$A:$A,$A{r},{pn}!$E:$E,{prec})")
+            syn.cell(r, paye + 1, f"=ROUND(B{r}-{lp}{r},2)")
+            for c in range(2, paye + 2):
                 syn.cell(r, c).number_format = CHF
             r += 1
-        _total(syn, r, debut, r - 1, range(2, 5), 4)
+        _total(syn, r, debut, r - 1, range(2, paye + 2), paye + 1)
     syn.freeze_panes = "A5"
     syn.page_setup.orientation = "landscape"
     syn.page_setup.fitToWidth = 1

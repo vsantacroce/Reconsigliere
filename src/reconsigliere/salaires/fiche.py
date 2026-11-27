@@ -15,7 +15,7 @@ from openpyxl.styles import Font, PatternFill
 
 from .. import config
 
-COLONNES_DU = ["employe", "net_du", "source", "remarque"]
+COLONNES_DU = ["employe", "net_du", "source", "remarque", "reste_prec_classeur", "note_classeur"]
 COLONNES_VIREMENTS = ["id", "employe", "date", "banque", "montant", "exercice", "part_salaire", "type", "libelle",
                       "piece", "imputation", "controle", "preuve"]
 COLONNES_POINTS = ["employe", "point"]
@@ -26,7 +26,7 @@ PREFIXE_DU = "du:"
 _SAISIE = PatternFill("solid", fgColor="FFF2CC")
 _ENTETE = PatternFill("solid", fgColor="DDE4EE")
 _LARGEURS = {"id": 34, "employe": 30, "date": 12, "libelle": 34, "piece": 32, "imputation": 60, "type": 24,
-             "preuve": 28, "source": 18, "remarque": 50, "point": 90, "controle": 18}
+             "preuve": 28, "source": 18, "remarque": 50, "reste_prec_classeur": 18, "note_classeur": 60, "point": 90, "controle": 18}
 
 
 class FichierOuvert(Exception):
@@ -179,7 +179,9 @@ def lire(annee: int) -> dict | None:
         return None
     wb = openpyxl.load_workbook(chemin, data_only=True)
     du = [{"employe": str(d.get("employe") or ""), "net_du": _montant(d.get("net_du")),
-           "source": str(d.get("source") or ""), "remarque": str(d.get("remarque") or "")}
+           "source": str(d.get("source") or ""), "remarque": str(d.get("remarque") or ""),
+           "reste_prec_classeur": None if d.get("reste_prec_classeur") in (None, "") else _montant(d["reste_prec_classeur"]),
+           "note_classeur": str(d.get("note_classeur") or "")}
           for d in _lignes(wb["du"]) if d.get("employe")]
     virements = [_normaliser_virement(v) for v in _lignes(wb["virements"]) if v.get("employe")]
     points = [{"employe": str(p.get("employe") or ""), "point": str(p.get("point") or "")}

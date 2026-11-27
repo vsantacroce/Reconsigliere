@@ -2,7 +2,7 @@
 
 ## À quoi il sert
 
-L'onglet « Salaires » de la fenêtre : 1. choisir l'année, **Lire le classeur de paie** (met la fiche à jour et dit combien de virements sont nouveaux, retirés, et combien de corrections sont gardées), **Ouvrir la fiche**, **Ouvrir le dossier** ; 2. **Générer** l'Excel pour la fiduciaire, **Ouvrir**, **Enregistrer sous…** (copie où tu veux). En dessous : le reste à régler, le nombre de points à vérifier, la synthèse par employé (écarts en orange) et les restes de l'année précédente.
+L'onglet « Salaires » de la fenêtre : 1. choisir l'année, **Lire le classeur de paie** (met la fiche à jour et dit combien de virements sont nouveaux, retirés, et combien de corrections sont gardées), **Ouvrir la fiche**, **Ouvrir le dossier** ; 2. **Générer** l'Excel pour la fiduciaire, **Ouvrir**, **Enregistrer sous…** (copie où tu veux). En dessous : le reste à régler, le nombre de points à vérifier, la synthèse par employé (écarts en orange) et les restes de l'année précédente (avec le montant annoncé par ton classeur, onglet FRAIS).
 
 ## Ce qu'il lit
 
@@ -22,7 +22,7 @@ La fiche (bouton Lire), l'Excel de réconciliation (Générer), une copie choisi
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/onglet_salaires.py` (219 lignes)
+- **Fichier :** `src/reconsigliere/onglet_salaires.py` (221 lignes)
 - **Dépend de :** [config](config.md), [installation](installation.md), [salaires.fiche](salaires/fiche.md), [salaires.reconciliation](salaires/reconciliation.md)
 - **Utilisé par :** [fenetre](fenetre.md)
 - **Bibliothèques externes :** aucune
