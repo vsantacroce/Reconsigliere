@@ -20,6 +20,12 @@ from datetime import date
 from . import __version__, config, exercices, installation, societe
 from . import onglet_apprentissage as onglet_apprentissage_module
 from . import onglet_documents as onglet_documents_module
+from . import onglets_societe
+
+try:  # construit par le fil Salaires ; tant qu'il n'existe pas, l'onglet affiche une phrase
+    from . import onglet_salaires as onglet_salaires_module
+except ImportError:
+    onglet_salaires_module = None
 
 TITRE = "Reconsigliere"
 NB_ETAPES = 5
@@ -34,9 +40,12 @@ class Fenetre:
 
         racine_tk.title(f"{TITRE} — réconciliation et état de la société")
         self._icone()
-        racine_tk.minsize(820, 760)
-        racine_tk.geometry("920x880")
         self._style()
+        echelle = max(1.0, float(racine_tk.tk.call("tk", "scaling")) / (96 / 72))
+        racine_tk.minsize(min(round(820 * echelle), racine_tk.winfo_screenwidth() - 40),
+                          min(round(640 * echelle), racine_tk.winfo_screenheight() - 80))
+        racine_tk.geometry(onglets_societe.geometrie(racine_tk.winfo_screenwidth(),
+                                                     racine_tk.winfo_screenheight(), echelle))
         self._construire()
 
         memorise = installation.dossier_memorise()
@@ -74,6 +83,19 @@ class Fenetre:
         style.configure("Grand.TButton", font=("Segoe UI", 12, "bold"), padding=(16, 10))
         style.configure("Section.TLabelframe.Label", font=("Segoe UI", 10, "bold"))
         style.configure("Vert.Horizontal.TProgressbar", background="#1f8a4c", troughcolor="#e4e7ec")
+        style.configure("Explication.TLabel", font=("Segoe UI", 11), foreground="#344054")
+        # Carnet sans rangée d'onglets : la barre de boutons (deux lignes) la remplace.
+        style.layout("SansOnglets.TNotebook.Tab", [])
+        style.configure("SansOnglets.TNotebook", borderwidth=0, tabmargins=0)
+        style.configure("Onglet.TRadiobutton", font=("Segoe UI", 11), padding=(10, 7), anchor="center",
+                        background="#e4e7ec", foreground="#1d2939", indicatorsize=0, indicatormargin=0,
+                        relief="flat")
+        style.layout("Onglet.TRadiobutton", [("Radiobutton.padding", {"sticky": "nswe", "children": [
+            ("Radiobutton.label", {"sticky": "nswe"})]})])
+        style.map("Onglet.TRadiobutton",
+                  background=[("selected", "#1d4ed8"), ("active", "#cbd5e1")],
+                  foreground=[("selected", "#ffffff")],
+                  font=[("selected", ("Segoe UI", 11, "bold"))])
 
     def _section(self, parent, titre: str, extensible: bool = False) -> ttk.Labelframe:
         cadre = ttk.Labelframe(parent, text=titre, padding=10, style="Section.TLabelframe")
@@ -88,32 +110,69 @@ class Fenetre:
         ttk.Label(principal, style="Doux.TLabel",
                   text="Le consigliere de ta compta : il rapproche tes transactions, tes factures et ta comptabilité.").pack(anchor="w", pady=(0, 12))
 
-        self.onglets = ttk.Notebook(principal)
+        barre = ttk.Frame(principal)
+        barre.pack(fill="x", pady=(0, 8))
+        self.barre_onglets = barre
+        self.onglets = ttk.Notebook(principal, style="SansOnglets.TNotebook")
         self.onglets.pack(fill="both", expand=True)
-        onglet_reco = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
-        onglet_documents = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
-        onglet_assistant = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
-        onglet_apprentissage = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
-        self.onglet_assistant = onglet_assistant
-        self.onglets.add(onglet_reco, text="  Réconciliation  ")
-        self.onglets.add(onglet_documents, text="  Documents  ")
-        self.onglets.add(onglet_assistant, text="  Assistant société  ")
-        self.onglets.add(onglet_apprentissage, text="  Apprentissage  ")
+        self.v_onglet = tk.StringVar()
+        self.cadres: dict[str, ttk.Frame] = {}
+        for i, (cle, titre) in enumerate(onglets_societe.ONGLETS):
+            page = ttk.Frame(self.onglets, padding=(0, 4, 0, 0))
+            self.onglets.add(page, text=titre)
+            explication = ttk.Label(page, text=onglets_societe.EXPLICATIONS[cle], style="Explication.TLabel",
+                                    wraplength=900, justify="left")
+            explication.pack(fill="x", anchor="w", pady=(0, 8))
+            explication.bind("<Configure>", lambda e: e.widget.configure(wraplength=max(200, e.width - 10)))
+            cadre = ttk.Frame(page)
+            cadre.pack(fill="both", expand=True)
+            self.cadres[cle] = cadre
+            ligne, colonne = divmod(i, onglets_societe.ONGLETS_PAR_LIGNE)
+            ttk.Radiobutton(barre, text=titre, value=str(page), variable=self.v_onglet, style="Onglet.TRadiobutton",
+                            command=lambda p=page: self.onglets.select(p)).grid(
+                row=ligne, column=colonne, sticky="nsew", padx=(0, 4), pady=(0, 4))
+        for c in range(onglets_societe.ONGLETS_PAR_LIGNE):
+            barre.columnconfigure(c, weight=1, uniform="onglets")
         self.onglets.bind("<<NotebookTabChanged>>", lambda _e: self._onglet_change())
-        self.documents_cadre = onglet_documents
-        self.documents = onglet_documents_module.construire(onglet_documents, self)
-        self.apprentissage_cadre = onglet_apprentissage
-        self.apprentissage = onglet_apprentissage_module.construire(onglet_apprentissage, self)
-        self.sous_onglets = ttk.Notebook(onglet_assistant)
-        self.sous_onglets.pack(fill="both", expand=True)
-        onglet_societe = ttk.Frame(self.sous_onglets, padding=(0, 10, 0, 0))
-        onglet_exercices = ttk.Frame(self.sous_onglets, padding=(0, 10, 0, 0))
-        self.sous_onglets.add(onglet_societe, text=" État de la société ")
-        self.sous_onglets.add(onglet_exercices, text=" Exercices et changements ")
-        self.sous_onglets.bind("<<NotebookTabChanged>>", lambda _e: self._actualiser_assistant())
-        self._construire_societe(onglet_societe)
-        self._construire_exercices(onglet_exercices)
-        principal_reco = onglet_reco
+
+        onglet_reco = self.cadres["reconciliation"]
+        self.documents = onglet_documents_module.construire(self.cadres["documents"], self)
+        self.apprentissage = onglet_apprentissage_module.construire(self.cadres["apprentissage"], self)
+        if onglet_salaires_module is not None:
+            self.salaires = onglet_salaires_module.construire(self.cadres["salaires"], self)
+        else:
+            self.salaires = None
+            ttk.Label(self.cadres["salaires"], style="Doux.TLabel", wraplength=900, justify="left",
+                      text="Cette partie est en cours de fabrication : elle arrivera dans une prochaine mise à jour.").pack(
+                anchor="w")
+        self._construire_societe(self.cadres["brevets"])
+        self.projets = onglets_societe.OngletTableau(
+            self.cadres["projets"], onglets_societe.COLONNES_PROJETS, onglets_societe.remplir_projets,
+            boutons=[("Modifier les projets (Excel)", self._ouvrir_classeur_societe)])
+        self.revenus = onglets_societe.OngletTableau(
+            self.cadres["revenus"], onglets_societe.COLONNES_REVENUS, onglets_societe.remplir_revenus,
+            boutons=[("Modifier les revenus (Excel)", self._ouvrir_classeur_societe)])
+        self.plan = onglets_societe.OngletTableau(
+            self.cadres["plan"], onglets_societe.COLONNES_REFERENTIEL["PlanComptable"],
+            lambda annee: onglets_societe.lignes_referentiel(annee, "PlanComptable"), avec_annee=True,
+            boutons=[("Voir les listes de l'année (Excel)", self._voir_referentiel)])
+        self.partenaires = onglets_societe.OngletTableau(
+            self.cadres["partenaires"], onglets_societe.COLONNES_REFERENTIEL["Partenaires"],
+            lambda annee: onglets_societe.lignes_referentiel(annee, "Partenaires"), avec_annee=True,
+            boutons=[("Voir les listes de l'année (Excel)", self._voir_referentiel)])
+        self._construire_exercices(self.cadres["annee"])
+        self.actualisations = {
+            "documents": lambda: self.documents.actualiser(),
+            "apprentissage": lambda: self.apprentissage.actualiser(),
+            "salaires": lambda: getattr(self.salaires, "actualiser", lambda: None)(),
+            "brevets": self._actualiser_societe,
+            "projets": lambda: self.projets.actualiser(),
+            "revenus": lambda: self.revenus.actualiser(),
+            "plan": lambda: self.plan.actualiser(),
+            "partenaires": lambda: self.partenaires.actualiser(),
+            "annee": self._actualiser_exercices,
+        }
+        principal_reco = self._page_defilante(onglet_reco)
 
         # 1. Dossier de travail
         s1 = self._section(principal_reco, "1. Dossier de travail")
@@ -198,27 +257,51 @@ class Fenetre:
         commit = os.environ.get("RECONSIGLIERE_COMMIT", "")
         version = f"Version {__version__}" + (f" ({commit}, mise à jour automatique)" if commit else "")
         ttk.Label(principal, text=f"{version} · tes fichiers restent sur cet ordinateur.",
-                  style="Doux.TLabel").pack(anchor="e", pady=(6, 0))
+                  style="Doux.TLabel").pack(side="bottom", anchor="e", pady=(6, 0), before=self.barre_onglets)
+
+    def _page_defilante(self, parent) -> ttk.Frame:
+        """Cadre qui défile verticalement quand l'écran est trop petit (affichage agrandi de Windows)."""
+        fond = ttk.Style(self.tk).lookup("TFrame", "background") or "#dcdad5"
+        toile = tk.Canvas(parent, highlightthickness=0, borderwidth=0, background=fond)
+        defil = ttk.Scrollbar(parent, orient="vertical", command=toile.yview)
+        interieur = ttk.Frame(toile)
+        fenetre_id = toile.create_window((0, 0), window=interieur, anchor="nw")
+        toile.configure(yscrollcommand=defil.set)
+
+        def ajuster(_e=None) -> None:
+            toile.itemconfigure(fenetre_id, width=toile.winfo_width())
+            toile.configure(scrollregion=toile.bbox("all"))
+            if interieur.winfo_reqheight() > toile.winfo_height():
+                defil.pack(side="right", fill="y")
+            else:
+                defil.pack_forget()
+                toile.yview_moveto(0)
+
+        interieur.bind("<Configure>", ajuster)
+        toile.bind("<Configure>", ajuster)
+        toile.bind("<Enter>", lambda _e: toile.bind_all(
+            "<MouseWheel>", lambda e: toile.yview_scroll(-1 if e.delta > 0 else 1, "units")))
+        toile.bind("<Leave>", lambda _e: toile.unbind_all("<MouseWheel>"))
+        toile.pack(side="left", fill="both", expand=True)
+        return interieur
 
     def _construire_societe(self, parent) -> None:
-        haut = self._section(parent, "Chiffres clés")
+        haut = self._section(parent, "Brevets en chiffres")
         self.tuiles: dict[str, ttk.Label] = {}
         intitules = [
             ("familles", "Familles de brevets actives"),
             ("depots", "Dépôts actifs"),
-            ("projets", "Projets capitalisables"),
-            ("revenus", "Sources de revenus actives"),
             ("capitalisable", "Coûts brevets capitalisables (CHF)"),
             ("charge", "Coûts brevets en charge (CHF)"),
         ]
         for i, (cle, texte) in enumerate(intitules):
             cadre = ttk.Frame(haut, padding=(0, 0, 18, 6))
-            cadre.grid(row=i // 3, column=i % 3, sticky="w")
+            cadre.grid(row=i // 2, column=i % 2, sticky="w")
             valeur = ttk.Label(cadre, text="—", style="Titre.TLabel")
             valeur.pack(anchor="w")
             ttk.Label(cadre, text=texte, style="Doux.TLabel").pack(anchor="w")
             self.tuiles[cle] = valeur
-        for c in range(3):
+        for c in range(2):
             haut.columnconfigure(c, weight=1)
 
         milieu = self._section(parent, "Brevets par famille", extensible=True)
@@ -233,7 +316,7 @@ class Fenetre:
         self.lbl_attention = ttk.Label(milieu, text="", wraplength=760, justify="left", foreground="#c2410c")
         self.lbl_attention.pack(anchor="w", pady=(8, 0))
 
-        bas = self._section(parent, "Tenir la société à jour")
+        bas = self._section(parent, "Mettre à jour")
         self.lbl_societe = ttk.Label(bas, style="Doux.TLabel", wraplength=760, justify="left", text="")
         self.lbl_societe.pack(anchor="w", pady=(0, 8))
         boutons = ttk.Frame(bas)
@@ -241,8 +324,7 @@ class Fenetre:
         self.boutons_societe = [
             ttk.Button(boutons, text="Ajouter au journal…", command=self._ajouter_journal),
             ttk.Button(boutons, text="Tableau de bord (page)", command=self._ouvrir_tableau_de_bord),
-            ttk.Button(boutons, text="Projets, revenus, journal (Excel)",
-                       command=lambda: self._ouvrir(societe.fichier_classeur() if self.dossier else None)),
+            ttk.Button(boutons, text="Projets, revenus, journal (Excel)", command=self._ouvrir_classeur_societe),
             ttk.Button(boutons, text="Dossier société",
                        command=lambda: self._ouvrir(societe.dossier_societe() if self.dossier else None)),
         ]
@@ -250,10 +332,10 @@ class Fenetre:
             b.pack(side="left", padx=(0, 6))
 
     def _construire_exercices(self, parent) -> None:
-        haut = self._section(parent, "Exercice")
+        haut = self._section(parent, "Année")
         ligne = ttk.Frame(haut)
         ligne.pack(fill="x")
-        ttk.Label(ligne, text="Exercice :").pack(side="left")
+        ttk.Label(ligne, text="Année :").pack(side="left")
         self.v_exercice = tk.StringVar()
         self.cb_exercice = ttk.Combobox(ligne, textvariable=self.v_exercice, width=8, state="readonly")
         self.cb_exercice.pack(side="left", padx=(6, 12))
@@ -265,7 +347,7 @@ class Fenetre:
         self.lbl_alerte_exercice = ttk.Label(haut, text="", foreground="#c2410c", wraplength=760, justify="left")
         self.lbl_alerte_exercice.pack(anchor="w")
 
-        milieu = self._section(parent, "Changements demandés pendant l'exercice", extensible=True)
+        milieu = self._section(parent, "Modifications demandées pendant l'année", extensible=True)
         colonnes = ("date", "action", "liste", "cle", "champ", "avant", "apres", "motif")
         self.arbre_changements = ttk.Treeview(milieu, columns=colonnes, show="headings", height=7)
         for col, texte, largeur in [("date", "Date", 85), ("action", "Action", 90), ("liste", "Liste", 100),
@@ -275,16 +357,16 @@ class Fenetre:
             self.arbre_changements.column(col, width=largeur, anchor="w", stretch=(col == "motif"))
         self.arbre_changements.pack(fill="both", expand=True)
 
-        bas = self._section(parent, "Actions")
+        bas = self._section(parent, "Que faire avec cette année")
         b1 = ttk.Frame(bas)
         b1.pack(anchor="w")
         b2 = ttk.Frame(bas)
         b2.pack(anchor="w", pady=(6, 0))
         self.boutons_exercices = [
-            ttk.Button(b1, text="Demander un changement…", command=self._demander_changement),
-            ttk.Button(b1, text="Écarts avec l'exercice précédent…", command=self._voir_ecarts),
+            ttk.Button(b1, text="Demander une modification…", command=self._demander_changement),
+            ttk.Button(b1, text="Écarts avec l'année précédente…", command=self._voir_ecarts),
             ttk.Button(b1, text="Suggestions depuis les fichiers…", command=self._voir_suggestions),
-            ttk.Button(b2, text="Voir le référentiel (Excel)", command=self._voir_referentiel),
+            ttk.Button(b2, text="Voir les listes de l'année (Excel)", command=self._voir_referentiel),
             ttk.Button(b2, text="Construire depuis les fichiers…", command=self._construire_exercice),
             ttk.Button(b2, text="Valider et verrouiller…", command=self._valider_exercice),
             ttk.Button(b2, text="Rouvrir…", command=self._rouvrir_exercice),
@@ -298,14 +380,6 @@ class Fenetre:
         v = self.v_exercice.get().strip()
         return int(v) if v.isdigit() else None
 
-    def _actualiser_assistant(self) -> None:
-        if self.dossier is None:
-            return
-        if self.sous_onglets.index("current") == 0:
-            self._actualiser_societe()
-        else:
-            self._actualiser_exercices()
-
     def _actualiser_exercices(self) -> None:
         if self.dossier is None:
             return
@@ -317,10 +391,10 @@ class Fenetre:
         self.arbre_changements.delete(*self.arbre_changements.get_children())
         annee = self._annee()
         if annee is None:
-            self.lbl_statut_exercice.configure(text="Aucun exercice pour l'instant.")
+            self.lbl_statut_exercice.configure(text="Aucune année pour l'instant.")
             self.lbl_compteurs_exercice.configure(
                 text="Dépose le plan comptable et le grand livre normalisés dans entrees › 06_societe › imports › "
-                     "AAAA, puis clique sur « Construire depuis les fichiers… » pour créer le premier exercice.")
+                     "AAAA, puis clique sur « Construire depuis les fichiers… » pour créer la première année.")
             self.lbl_alerte_exercice.configure(text="")
             return
         try:
@@ -330,9 +404,9 @@ class Fenetre:
             return
         if r["statut"] == exercices.VALIDE:
             jour = r["valide_le"][:10].split("-")
-            self.lbl_statut_exercice.configure(text=f"🔒 Validé et verrouillé le {'.'.join(reversed(jour))}")
+            self.lbl_statut_exercice.configure(text=f"🔒 Validée et verrouillée le {'.'.join(reversed(jour))}")
         else:
-            self.lbl_statut_exercice.configure(text="Ouvert : les changements sont possibles")
+            self.lbl_statut_exercice.configure(text="Ouverte : les modifications sont possibles")
         self.lbl_compteurs_exercice.configure(
             text=" · ".join(f"{nom} : {n}" for nom, n in r["compteurs"].items()))
         alertes = [a for a in (exercices.verifier(x) for x in annees) if a]
@@ -494,8 +568,6 @@ class Fenetre:
         c = donnees["compteurs"]
         self.tuiles["familles"].configure(text=f"{c['familles_actives']} / {c['familles']}")
         self.tuiles["depots"].configure(text=f"{c['depots_actifs']} (+{c['entrees_annoncees']})")
-        self.tuiles["projets"].configure(text=f"{c['projets_capitalisables']} / {c['projets']}")
-        self.tuiles["revenus"].configure(text=str(c["revenus_actifs"]))
         self.tuiles["capitalisable"].configure(text=societe.format_chf(c["capitalisable"]))
         self.tuiles["charge"].configure(text=societe.format_chf(c["charge"]))
         self.arbre.delete(*self.arbre.get_children())
@@ -510,6 +582,11 @@ class Fenetre:
             text=f"Fichiers lus dans entrees › 06_societe : {fichiers}. Dépose-y ton classeur des brevets ; "
                  "tiens les projets, les revenus et le journal dans societe.xlsx.")
         return donnees
+
+    def _ouvrir_classeur_societe(self) -> None:
+        if self.dossier is None:
+            return
+        self._ouvrir(societe.creer_modele_si_absent())
 
     def _ouvrir_tableau_de_bord(self) -> None:
         if self.dossier is None:
@@ -768,16 +845,15 @@ class Fenetre:
         return resultat["type"]
 
     def _onglet_change(self) -> None:
-        """Actualise l'onglet affiché (repéré par son widget, pas par sa position)."""
-        if self.dossier is None or not hasattr(self, "documents"):
-            return
+        """Surligne le bouton de l'onglet affiché et l'actualise (repéré par son cadre, pas par sa position)."""
         courant = self.onglets.select()
-        if courant == str(self.onglet_assistant):
-            self._actualiser_assistant()
-        elif courant == str(self.documents_cadre):
-            self.documents.actualiser()
-        elif courant == str(self.apprentissage_cadre):
-            self.apprentissage.actualiser()
+        self.v_onglet.set(courant)
+        if self.dossier is None or not hasattr(self, "actualisations"):
+            return
+        for cle, cadre in self.cadres.items():
+            if str(cadre.master) == courant and cle in self.actualisations:
+                self.actualisations[cle]()
+                return
 
     def _terminer_import(self, resultats: list[dict]) -> None:
         self.en_cours = False

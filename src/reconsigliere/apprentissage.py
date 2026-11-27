@@ -399,7 +399,7 @@ def reporter(partenaire: str, compte: str, nb_corrections: int, annee: int | Non
     """Inscrit la règle dans le référentiel de l'exercice ouvert (changement daté et motivé)."""
     annee = annee or exercices.exercice_courant()
     if annee is None:
-        raise ValueError("Aucun exercice construit : construis d'abord un exercice dans l'Assistant société.")
+        raise ValueError("Aucun exercice construit : construis d'abord l'année dans l'onglet « Année comptable ».")
     listes = exercices.lire(annee)
     plan = _plan({"PlanComptable": listes["PlanComptable"]})
     existant = next((p for p in listes["Partenaires"] if normaliser(p.get("partenaire")) == normaliser(partenaire)), None)

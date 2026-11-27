@@ -189,7 +189,7 @@ class OngletApprentissage:
             return
         annee = exercices.exercice_courant()
         if annee is None:
-            messagebox.showinfo("Apprentissage", "Aucun exercice construit : construis-le d'abord dans l'Assistant société.",
+            messagebox.showinfo("Apprentissage", "Aucune année construite : construis-la d'abord dans l'onglet « Année comptable ».",
                                 parent=self.f.tk)
             return
         if not messagebox.askyesno("Apprentissage", f"Inscrire dans le référentiel {annee} : {r['partenaire']} → {compte} ?\n"
