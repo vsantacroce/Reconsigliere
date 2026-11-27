@@ -16,3 +16,19 @@ jobs:
           python-version: "3.12"
       - run: pip install -r requirements.txt
       - run: python -m unittest discover -s tests -v
+
+  documentation:
+    # Échoue si la documentation de docs/ ne suit pas le code (voir docs/README.md et CLAUDE.md).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pages complètes et parties générées à jour
+        run: python outils/docs.py --verifier
+      - name: Chaque module modifié a sa page mise à jour
+        if: github.event_name == 'pull_request'
+        run: python outils/docs.py --depuis "origin/${{ github.base_ref }}"
