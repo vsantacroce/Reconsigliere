@@ -15,13 +15,15 @@ Contrôle : la somme des parts de salaire de l'exercice par employé doit égale
 
 ## Ce qu'il lit
 
-Les `.xlsx` de `entrees/08_salaires` : exercice dans ANNEE!B1 ; onglets EMPLOYES (noms en colonne B dès la ligne 7), ANNEE (titres en ligne 5 : « Net définitif », « Versé selon PAYE » ; nom complet dans la dernière colonne remplie), PAYé (blocs « E1 — nom », codes V1–V3, PAYE FRAIS, PAYE HP, colonnes janv…déc), Bank Transactions AAAA (Date, Employé, Type, Montant (CHF), Libellé, Banque, Écriture comptable, Rapprochement fiche).
+Les `.xlsx` de `entrees/08_salaires` : exercice dans ANNEE!B1 ; onglets EMPLOYES (noms en colonne B dès la ligne 7), ANNEE (titres en ligne 5 : « Net définitif », « Versé selon PAYE » ; nom complet dans la dernière colonne remplie), PAYé (blocs « E1 — nom », codes V1–V3, PAYE FRAIS, PAYE HP, colonnes janv…déc), Bank Transactions AAAA (Date, Employé, Type, Montant (CHF), Libellé, Banque, Écriture comptable, Rapprochement fiche). Facultatif : l'onglet FRAIS (le dû) ; ses lignes de code `HP` donnent, par employé, le reste de l'année précédente annoncé par ton classeur. Les lignes « Nom — Note » de PAYé et de FRAIS sont reprises telles quelles, avec l'onglet et le mois de la colonne où la note est écrite (les nombres de ces lignes sont ignorés).
 
 ## Ce qu'il écrit
 
 Rien : il rend les lignes à [salaires.fiche](fiche.md) (via `salaires.lire_classeur`).
 
 ## Ce qui casse si on le change
+
+- Renommer l'onglet FRAIS, le code `HP` ou le suffixe « — Note » : le reste annoncé et tes notes ne sont plus lus (sans message ; la colonne « Selon votre classeur » disparaît de l'Excel).
 
 - Renommer un onglet ou un titre de colonne dans le classeur de paie : lecture refusée avec « onglet … introuvable » ou « colonne … introuvable ».
 - Les règles 3 à 5 s'appuient sur l'onglet PAYé : un virement mixte non détaillé dans PAYé est compté entièrement comme salaire, et le contrôle « Versé selon PAYE » le signale.
@@ -32,7 +34,7 @@ Rien : il rend les lignes à [salaires.fiche](fiche.md) (via `salaires.lire_clas
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/salaires/lecture_paie.py` (280 lignes)
+- **Fichier :** `src/reconsigliere/salaires/lecture_paie.py` (326 lignes)
 - **Dépend de :** [config](../config.md), [salaires.fiche](fiche.md)
 - **Utilisé par :** aucun module (point d'entrée)
 - **Bibliothèques externes :** openpyxl

@@ -1,5 +1,13 @@
 # Changements
 
+## 0.10.1 — salaires : onglet FRAIS et notes
+
+- Le lecteur du classeur de paie lit l'onglet FRAIS (lignes HP) : le reste de l'année précédente annoncé par ton classeur.
+- Les lignes « Nom — Note » des onglets PAYé et FRAIS sont reprises dans la fiche, la feuille « Dû » et les points à vérifier.
+- Bloc « Restes N−1 payés en N » : nouvelle colonne « Selon votre classeur (FRAIS) » ; une différence avec la fiche N−1 devient un point à vérifier.
+- Onglet Salaires : même colonne dans le tableau des restes.
+- 6 tests ajoutés.
+
 ## 0.10.0 — un élément par onglet
 
 - Plus de sous-onglets « État de la société » et « Exercices et changements » ni d'onglet « Assistant société » : chaque élément

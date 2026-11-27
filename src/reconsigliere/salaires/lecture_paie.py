@@ -121,13 +121,7 @@ def _annee(wb, employes: list[str]) -> tuple[int, dict, dict]:
 def _reference_paye(wb, employes: list[str]) -> dict:
     """Montants de l'onglet PAYé par employé : salaires (V1-V3), frais et hors période, mois par mois."""
     ws = _onglet(wb, "PAYé")
-    colonnes = {}
-    for row in ws.iter_rows(min_row=1, max_row=20):
-        for c in row:
-            if _texte(c.value) in MOIS and _texte(c.value) not in colonnes:
-                colonnes[_texte(c.value)] = c.column
-        if len(colonnes) == 12:
-            break
+    colonnes = _colonnes_mois(ws)
     ref = {e: {"salaires": [], "extras": []} for e in employes}
     courant = None
     for row in ws.iter_rows(min_row=1):
@@ -148,6 +142,56 @@ def _reference_paye(wb, employes: list[str]) -> dict:
                 ref[courant]["extras"].append({"montant": montant, "genre": "frais" if code == "PAYE FRAIS" else "hp",
                                                "mois": mois, "utilise": False})
     return ref
+
+
+def _colonnes_mois(ws) -> dict:
+    colonnes = {}
+    for row in ws.iter_rows(min_row=1, max_row=20):
+        for c in row:
+            if _texte(c.value) in MOIS and _texte(c.value) not in colonnes:
+                colonnes[_texte(c.value)] = c.column
+        if len(colonnes) == 12:
+            break
+    return colonnes
+
+
+def _hors_periode_du(wb, employes: list[str]) -> dict | None:
+    """Onglet FRAIS (le dû) : somme des lignes HP (frais/salaire hors période) par employé. None sans onglet FRAIS."""
+    if "FRAIS" not in wb.sheetnames:
+        return None
+    ws = wb["FRAIS"]
+    colonnes = _colonnes_mois(ws)
+    du = {e: 0.0 for e in employes}
+    courant = None
+    for row in ws.iter_rows(min_row=1):
+        a, code = _texte(row[0].value), _texte(row[1].value) if len(row) > 1 else ""
+        m = re.match(r"^E\d+\s+—\s+(.+)$", a)
+        if m:
+            courant = m.group(1).strip() if m.group(1).strip() in du else None
+            continue
+        if courant and code == "HP":
+            du[courant] = round(du[courant] + sum(_num(ws.cell(row[0].row, c).value) or 0.0
+                                                  for c in colonnes.values()), 2)
+    return du
+
+
+def _notes(wb, employes: list[str]) -> dict:
+    """Textes des lignes « Nom — Note » des onglets PAYé et FRAIS, avec l'onglet et le mois."""
+    notes = {e: [] for e in employes}
+    for onglet in ("PAYé", "FRAIS"):
+        if onglet not in wb.sheetnames:
+            continue
+        ws = wb[onglet]
+        mois = {col: nom for nom, col in _colonnes_mois(ws).items()}
+        for row in ws.iter_rows(min_row=1):
+            m = re.match(r"^(.+?)\s+—\s+Note$", _texte(row[0].value))
+            if not m or m.group(1).strip() not in notes:
+                continue
+            for c in row[1:]:
+                if isinstance(c.value, str) and c.value.strip() and not c.value.startswith("="):
+                    ou = f"{onglet}, {mois[c.column]}" if c.column in mois else onglet
+                    notes[m.group(1).strip()].append(f"Note de votre classeur ({ou}) : {c.value.strip()}")
+    return {e: " | ".join(t) for e, t in notes.items()}
 
 
 def _colonnes_banque(ws) -> dict:
@@ -262,7 +306,9 @@ def lire(chemin: Path) -> dict:
             _decouper(v, annee, ref)
     fiche.identifiants(virements)
 
-    du = [{"employe": e, "net_du": du_brut[e][0], "source": du_brut[e][1], "remarque": ""}
+    hp, notes = _hors_periode_du(wb, employes), _notes(wb, employes)
+    du = [{"employe": e, "net_du": du_brut[e][0], "source": du_brut[e][1], "remarque": "",
+           "reste_prec_classeur": None if hp is None else hp[e], "note_classeur": notes[e]}
           for e in employes if e in du_brut]
     controles = []
     for e in employes:

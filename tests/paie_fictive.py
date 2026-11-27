@@ -47,6 +47,12 @@ VIREMENTS = [
     ("2025-06-24", "Rossi Carla", "Salaire", 9654.80, "salary", "BNK/2025/00013"),
 ]
 
+# Onglet FRAIS : ce qui était dû hors période (lignes HP), par employé et par mois
+FRAIS_HP = [("Durand Alice", {6: 5000.00}), ("Rossi Carla", {6: 290.00})]
+# Lignes « Nom — Note » : (onglet, employé, mois, texte)
+NOTES = [("PAYé", "Rossi Carla", 6, "le montant 286.17 est faux, il manque 3.83"),
+         ("FRAIS", "Rossi Carla", 6, "vérifier ce montant")]
+
 NET_DU = {"Durand Alice": 38200.00, "Meier Bruno": 9771.00, "Rossi Carla": 19309.60}
 
 
@@ -54,7 +60,7 @@ def verse_paye(employe: str) -> float:
     return round(sum(m for e, code, mois in PAYE if e == employe and code == "V1" for m in mois.values()), 2)
 
 
-def creer_classeur_paie(chemin: Path, annee: int = 2025, verse: dict | None = None) -> Path:
+def creer_classeur_paie(chemin: Path, annee: int = 2025, verse: dict | None = None, frais: bool = True) -> Path:
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "SCHEMA"
@@ -105,7 +111,41 @@ def creer_classeur_paie(chemin: Path, annee: int = 2025, verse: dict | None = No
             r += 1
         pay.cell(r, 1, f"TOTAL VERSÉ {nom}")
         pay.cell(r, 2, "PAYE TOT")
+        r += 1
+        pay.cell(r, 1, f"{nom} — Note")
+        for onglet, e, m, texte in NOTES:
+            if onglet == "PAYé" and e == nom:
+                pay.cell(r, 4 + m, texte)
+        pay.cell(r, 19, 1234.5)  # un total dans la ligne de note, à ignorer
         r += 2
+
+    if frais:
+        fr = wb.create_sheet("FRAIS")
+        fr["A1"] = "FRAIS A Rembourser — notes de frais et frais/salaire hors période (le dû)"
+        r = 5
+        for n, nom in enumerate(EMPLOYES, 1):
+            fr.cell(r, 1, "Rubrique")
+            for m, nom_mois in enumerate(MOIS, 5):
+                fr.cell(r, m, nom_mois)
+            fr.cell(r + 1, 1, f"E{n} — {nom}")
+            fr.cell(r + 2, 1, f"{nom} · Note de frais 1")
+            fr.cell(r + 2, 2, "NOTE FRAIS")
+            fr.cell(r + 2, 5, 99.0)
+            fr.cell(r + 3, 1, f"{nom} · Frais/Salaire hors période 1")
+            fr.cell(r + 3, 2, "HP")
+            for e, mois in FRAIS_HP:
+                if e == nom:
+                    for m, montant in mois.items():
+                        fr.cell(r + 3, 4 + m, montant)
+            fr.cell(r + 3, 19, "=SUM(E1:P1)")
+            fr.cell(r + 4, 1, f"TOTAL HORS PÉRIODE {nom}")
+            fr.cell(r + 4, 2, "HP TOT")
+            fr.cell(r + 4, 10, 99999.0)
+            fr.cell(r + 5, 1, f"{nom} — Note")
+            for onglet, e, m, texte in NOTES:
+                if onglet == "FRAIS" and e == nom:
+                    fr.cell(r + 5, 4 + m, texte)
+            r += 8
 
     bk = wb.create_sheet(f"Bank Transactions {annee}")
     bk.append(["Date", "Employé", "Type", "Montant (CHF)", "IBAN (relevé)", "IBAN de référence", "Libellé", "Partenaire",
