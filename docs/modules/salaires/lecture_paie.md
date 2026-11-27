@@ -23,6 +23,8 @@ Rien : il rend les lignes à [salaires.fiche](fiche.md) (via `salaires.lire_clas
 
 ## Ce qui casse si on le change
 
+- Un virement dont le type commence par « Bonus » est un bonus : exercice = l'année écrite dans le type (« Bonus 2025 »), sinon l'année précédente ; il n'entre pas dans le contrôle « Versé selon PAYE ».
+
 - Renommer l'onglet FRAIS, le code `HP` ou le suffixe « — Note » : le reste annoncé et tes notes ne sont plus lus (sans message ; la colonne « Selon votre classeur » disparaît de l'Excel).
 
 - Renommer un onglet ou un titre de colonne dans le classeur de paie : lecture refusée avec « onglet … introuvable » ou « colonne … introuvable ».
@@ -34,7 +36,7 @@ Rien : il rend les lignes à [salaires.fiche](fiche.md) (via `salaires.lire_clas
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/salaires/lecture_paie.py` (326 lignes)
+- **Fichier :** `src/reconsigliere/salaires/lecture_paie.py` (333 lignes)
 - **Dépend de :** [config](../config.md), [salaires.fiche](fiche.md)
 - **Utilisé par :** aucun module (point d'entrée)
 - **Bibliothèques externes :** openpyxl

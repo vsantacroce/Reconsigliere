@@ -45,6 +45,7 @@ VIREMENTS = [
     ("2025-05-27", "Rossi Carla", "Salaire", 9654.80, "salary", "BNK/2025/00011"),
     ("2025-06-23", "Rossi Carla", "Salaire", 391.49, "Debit salary", "BNK/2025/00012"),
     ("2025-06-24", "Rossi Carla", "Salaire", 9654.80, "salary", "BNK/2025/00013"),
+    ("2025-03-25", "Meier Bruno", "Bonus 2024", 1200.00, "bonus", "BNK/2025/00014"),
 ]
 
 # Onglet FRAIS : ce qui était dû hors période (lignes HP), par employé et par mois
