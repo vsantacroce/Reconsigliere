@@ -69,13 +69,17 @@ Chemins relatifs au dossier de travail.
 | `sorties/reconciliation.xlsx` | Une ligne par transaction, les PDF sans transaction et un résumé |
 | `sorties/apprentissage.xlsx` | Ce que le programme a appris de tes corrections de compte : règles, alertes, corrections prises en compte |
 | `sorties/reconciliation.html` | La même chose en page interactive, avec recherche, filtres et liens vers les PDF |
-| `sorties/societe.html` | Tableau de bord de la société, recréé par le bouton « Tableau de bord » de l'onglet Assistant société |
+| `sorties/societe.html` | Tableau de bord de la société, recréé par le bouton « Tableau de bord » de l'onglet Brevets |
 | `sorties/pdf_renommes` | Chaque pièce retrouvée, nommée `AAAA-MM-JJ_Partenaire_Montant_Numero` avec son extension d'origine |
 | `sorties/a_comptabiliser` | Seulement les pièces absentes de la comptabilité |
 
-## État de la société (onglet Assistant société)
+## Brevets, projets, revenus (onglets Brevets, Projets, Revenus)
 
-L'onglet Assistant société › État de la société montre l'état de la société au jour le jour : familles de brevets et dépôts par pays, coûts capitalisables et en charge, projets capitalisables, sources de revenus et journal.
+Les onglets de la fenêtre sont, dans l'ordre : Réconciliation, Documents, Salaires, Brevets, Projets, Revenus, Plan comptable,
+Partenaires, Année comptable, Apprentissage. Chaque onglet commence par une phrase qui dit ce qu'il montre.
+
+L'onglet Brevets montre les familles de brevets et les dépôts par pays, les coûts capitalisables et en charge, et les points d'attention.
+Les onglets Projets et Revenus montrent les lignes des onglets du même nom de `societe.xlsx`.
 
 1. Dépose ton classeur des brevets dans `entrees/06_societe`, tel que tu le tiens déjà.
    Reconsigliere y reconnaît l'onglet de la liste (colonnes `ID`, `Title`, `Patent number`, `Filing date`, `Approved date`, `Abandon date`, `Patent owner`) et les onglets de coûts (colonnes `Brevet`, `Classification` Capitalisable/Charge, `Montant HT CHF`, `Date facture`).
@@ -88,16 +92,16 @@ Les points d'attention signalent les familles abandonnées qui ont encore des co
 
 Sans fenêtre : `python -m reconsigliere.societe --dossier "C:\Users\moi\Documents\Reconsigliere"`.
 
-## Exercices : référentiel validé et verrouillé chaque année
+## Année comptable : listes validées et verrouillées chaque année
 
-L'onglet Assistant société › Exercices et changements tient, pour chaque exercice, un référentiel de cinq listes : plan comptable, partenaires et leur compte habituel, brevets, projets, sources de revenus.
+L'onglet Année comptable tient, pour chaque exercice, un référentiel de cinq listes : plan comptable, partenaires et leur compte habituel, brevets, projets, sources de revenus.
 
 1. Dépose le plan comptable et le grand livre normalisés dans `entrees/06_societe/imports/2024` (onglets `PlanComptable` et `GrandLivre`).
 2. « Construire depuis les fichiers… » crée le référentiel 2024. Le compte habituel de chaque partenaire est le compte le plus utilisé avec lui dans le grand livre, sans les comptes de banque, débiteurs, créanciers et TVA. Les brevets sont pris tels qu'ils étaient au 31.12.2024.
-3. Contrôle-le avec « Voir le référentiel (Excel) » (une copie, l'original n'est jamais ouvert), puis « Valider et verrouiller… ». Le fichier passe en lecture seule, son empreinte SHA-256 est enregistrée, et 2025 s'ouvre comme copie de 2024.
-4. Pendant 2025, « Demander un changement… » ajoute, modifie ou retire un élément, avec une date et un motif. Chaque demande reste dans l'onglet `Changements` du référentiel.
+3. Contrôle-le avec « Voir les listes de l'année (Excel) » (une copie, l'original n'est jamais ouvert), puis « Valider et verrouiller… ». Le fichier passe en lecture seule, son empreinte SHA-256 est enregistrée, et 2025 s'ouvre comme copie de 2024.
+4. Pendant 2025, « Demander une modification… » ajoute, modifie ou retire un élément, avec une date et un motif. Chaque demande reste dans l'onglet `Changements` du référentiel.
    « Suggestions depuis les fichiers… » montre ce que les fichiers déposés disent de différent (nouveaux dépôts de brevets, abandon, comptes) et applique les lignes choisies comme des demandes.
-5. « Écarts avec l'exercice précédent… » compare 2025 en cours à 2024 validé.
+5. « Écarts avec l'année précédente… » compare 2025 en cours à 2024 validé.
 6. À la clôture, « Valider et verrouiller… » fige 2025 et ouvre 2026.
 
 Un exercice validé ne se modifie plus. « Rouvrir… » le rouvre avec un motif obligatoire, inscrit dans l'historique (`etat.json`). Si le fichier d'un exercice validé est modifié à la main, l'Assistant le signale.
@@ -153,7 +157,7 @@ et le tableau obtenu, filtrables par exercice.
 
 Résultats : un classeur normalisé par document dans `entrees/06_societe/imports/AAAA`
 (onglets `meta`, `pages`, `controles`, `plancomptable`, `grandlivre`, `bilan`, `compteresultat`,
-`annexe`), lu par l'Assistant société, et une page lisible dans `sorties/imports`.
+`annexe`), lu par l'onglet Année comptable, et une page lisible dans `sorties/imports`.
 Un document déjà importé (même contenu) n'est pas réimporté, sauf avec `--forcer`.
 
 Le partenaire de chaque écriture n'est fiable que depuis un export Excel du grand livre : dans un PDF,

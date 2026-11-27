@@ -40,7 +40,7 @@ _Partie générée par `python outils/docs.py` à partir du code : ne pas la mod
 
 - **Fichier :** `src/reconsigliere/exercices.py` (681 lignes)
 - **Dépend de :** [societe](societe.md)
-- **Utilisé par :** [__main__](__main__.md), [apprentissage](apprentissage.md), [fenetre](fenetre.md), [onglet_apprentissage](onglet_apprentissage.md)
+- **Utilisé par :** [__main__](__main__.md), [apprentissage](apprentissage.md), [fenetre](fenetre.md), [onglet_apprentissage](onglet_apprentissage.md), [onglets_societe](onglets_societe.md)
 - **Bibliothèques externes :** openpyxl
 
 Fonctions et classes publiques :

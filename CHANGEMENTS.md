@@ -1,5 +1,19 @@
 # Changements
 
+## 0.10.0 — un élément par onglet
+
+- Plus de sous-onglets « État de la société » et « Exercices et changements » ni d'onglet « Assistant société » : chaque élément
+  est un onglet principal. Ordre : Réconciliation, Documents, Salaires, Brevets, Projets, Revenus, Plan comptable, Partenaires,
+  Année comptable, Apprentissage.
+- Les onglets sont une barre de grands boutons sur deux lignes ; l'onglet ouvert est surligné en bleu. Chaque onglet commence par
+  une phrase qui dit ce qu'il montre.
+- Nouveaux onglets Projets et Revenus (tableaux de `societe.xlsx`), Plan comptable et Partenaires (liste de l'année choisie).
+- « Exercices et changements » devient « Année comptable » : « Demander une modification… », « Écarts avec l'année précédente… »,
+  « Voir les listes de l'année (Excel) ».
+- La fenêtre suit l'agrandissement de l'affichage de Windows (125 %, 150 %) et reste dans l'écran ; les pages Réconciliation,
+  Brevets et Année comptable défilent quand elles sont trop hautes ; les lignes des tableaux ne se chevauchent plus.
+- 10 tests ajoutés (`tests/test_onglets.py`).
+
 ## 0.9.0 — salaires
 
 - Nouvel onglet principal « Salaires », juste après « Documents » : choisir l'année, lire le classeur de paie, voir la synthèse

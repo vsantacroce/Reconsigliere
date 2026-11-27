@@ -22,6 +22,7 @@ des autres partenaires rangés sur ce même ancien compte, « même erreur possi
 
 Enfin, il fixe le compte final de chaque transaction : ta correction, sinon la règle apprise, sinon la proposition du référentiel
 ([exercices](exercices.md)). `reporter()` inscrit une règle active dans le référentiel de l'exercice ouvert (changement daté et motivé).
+  Sans année construite, `reporter()` refuse et renvoie vers l'onglet « Année comptable » de la fenêtre.
 
 ## Ce qu'il lit
 

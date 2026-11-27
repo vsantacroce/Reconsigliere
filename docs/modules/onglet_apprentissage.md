@@ -20,6 +20,7 @@ réconciliation :
 
 - Annuler / rétablir : une ligne ajoutée ou retirée dans la feuille `regles_apprises` de `mes_corrections.xlsx`
   ([corrections](corrections.md)). L'effet arrive au lancement suivant ; la ligne est marquée « annulée au prochain lancement ».
+- Sans année construite, le bouton Reporter explique qu'il faut d'abord la construire dans l'onglet « Année comptable ».
 - Reporter : un changement dans le référentiel de l'exercice ouvert ([exercices](exercices.md)), après confirmation. Seules les règles
   actives à un seul compte peuvent être reportées.
 

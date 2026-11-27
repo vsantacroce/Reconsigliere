@@ -2,20 +2,23 @@
 
 ## À quoi il sert
 
-L'interface que tu utilises sous Windows (tkinter, inclus dans Python ; sous Ubuntu il faut `python3-tk`). Cinq parties :
+L'interface que tu utilises sous Windows (tkinter, inclus dans Python ; sous Ubuntu il faut `python3-tk`). Dix onglets principaux,
+un par élément, choisis dans une barre de boutons sur deux lignes (ordre, titres et phrases d'explication dans
+[onglets_societe](onglets_societe.md)) :
 
 - **Réconciliation** : choix du dossier de travail, compteurs de fichiers par dossier, bouton « Lancer la réconciliation »
   avec barre de progression et journal, boutons d'ouverture des résultats.
 - **Documents** : construit par [onglet_documents](onglet_documents.md) ; « Importer les documents », réglages IA, vue d'ensemble
   des fichiers importés et un sous-onglet par type de document. La fenêtre garde la logique d'import (`_importer`, `_reglages_ia`,
   choix manuel du type de page).
-- **Salaires** : construit par [onglet_salaires](onglet_salaires.md), juste après Documents ; exercice, lecture du classeur de paie,
+- **Salaires** : construit par [onglet_salaires](onglet_salaires.md) ; exercice, lecture du classeur de paie,
   synthèse par employé, Générer, Ouvrir, Enregistrer sous….
-- **Assistant société** : sous-onglet « État de la société » (brevets, coûts, projets, revenus, journal, tableau de bord) et
-  sous-onglet « Exercices et changements » (construire, voir, valider et verrouiller, rouvrir, demander un changement, écarts, suggestions).
-
+- **Brevets** : chiffres des brevets, tableau par famille, points d'attention, journal, tableau de bord, classeur et dossier société.
+- **Projets**, **Revenus**, **Plan comptable**, **Partenaires** : tableaux construits par [onglets_societe](onglets_societe.md).
+- **Année comptable** : construire l'année, voir ses listes, valider et verrouiller, rouvrir, demander une modification, écarts,
+  suggestions.
 - **Apprentissage** : construit par [onglet_apprentissage](onglet_apprentissage.md) ; règles apprises de tes corrections, alertes,
-  annuler, rétablir, reporter dans l'exercice ouvert.
+  annuler, rétablir, reporter dans l'année ouverte.
 
 Les petites fenêtres `Journal`, `Changement` et `Ecarts` sont dans le même fichier.
 
@@ -38,9 +41,13 @@ Rien lui-même : chaque bouton appelle un autre module (réconciliation via [__m
 - **Imports tardifs** : pandas et le pipeline d'import ne sont chargés qu'au clic, pour que la fenêtre s'ouvre vite. Les remonter en
   haut du fichier ralentit l'ouverture.
 - **Choix manuel du type de page** (`_demander_type`) : appelé par le pipeline quand ni les règles ni l'IA ne savent classer une page.
-- **Onglets repérés par leur widget** (`_onglet_change`) et non par leur position : insérer un onglet ne doit pas déclencher
-  l'actualisation du mauvais onglet. Un nouvel onglet ajoute son cas dans `_onglet_change`.
-- La fenêtre fait 920 × 880 ; ajouter un onglet ou des boutons peut dépasser l'écran d'un portable.
+- **Onglets repérés par leur clé** : `self.cadres` (clé → cadre) et `self.actualisations` (clé → actualisation). Un nouvel onglet
+  s'ajoute dans `ONGLETS` et `EXPLICATIONS` de [onglets_societe](onglets_societe.md), puis dans ces deux dictionnaires.
+- **Barre d'onglets** : la rangée d'onglets de tkinter est cachée (style `SansOnglets.TNotebook`) car dix onglets ne tiennent pas
+  sur une ligne ; les boutons `Onglet.TRadiobutton` la remplacent. Remettre la rangée d'onglets fait disparaître ceux qui dépassent.
+- **Taille** : calculée par `onglets_societe.geometrie` selon l'agrandissement de Windows et bornée à l'écran. Les pages Réconciliation,
+  Brevets et Année comptable sont dans un cadre qui défile (`_page_defilante`) ; la hauteur des lignes de tableau suit la police.
+  Revenir à une taille fixe en pixels coupe le bas de la fenêtre à 125–150 %.
 - C'est le point d'entrée de l'icône Windows (via [windows.demarrer](windows/demarrer.md)) : une erreur à l'import de ce module
   empêche le programme de s'ouvrir.
 
@@ -49,8 +56,8 @@ Rien lui-même : chaque bouton appelle un autre module (réconciliation via [__m
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/fenetre.py` (1064 lignes)
-- **Dépend de :** [__main__](__main__.md), [config](config.md), [exercices](exercices.md), [importation.classement](importation/classement.md), [importation.ia](importation/ia.md), [importation.pipeline](importation/pipeline.md), [installation](installation.md), [onglet_apprentissage](onglet_apprentissage.md), [onglet_documents](onglet_documents.md), [onglet_salaires](onglet_salaires.md), [societe](societe.md)
+- **Fichier :** `src/reconsigliere/fenetre.py` (1137 lignes)
+- **Dépend de :** [__main__](__main__.md), [config](config.md), [exercices](exercices.md), [importation.classement](importation/classement.md), [importation.ia](importation/ia.md), [importation.pipeline](importation/pipeline.md), [installation](installation.md), [onglet_apprentissage](onglet_apprentissage.md), [onglet_documents](onglet_documents.md), [onglet_salaires](onglet_salaires.md), [onglets_societe](onglets_societe.md), [societe](societe.md)
 - **Utilisé par :** aucun module (point d'entrée)
 - **Bibliothèques externes :** aucune
 
