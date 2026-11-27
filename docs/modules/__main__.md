@@ -6,7 +6,8 @@ Enchaîne les cinq étapes de la réconciliation (`main`) et répond aux command
 
 - `python -m reconsigliere [--dossier CHEMIN]` : réconciliation ;
 - `python -m reconsigliere importer [FICHIERS] [--sans-ia] [--modele haiku|sonnet] [--forcer]` : import de documents ;
-- `python -m reconsigliere banc-ia [--modeles …]` : comparaison des modèles d'IA.
+- `python -m reconsigliere banc-ia [--modeles …]` : comparaison des modèles d'IA ;
+- `python -m reconsigliere salaires AAAA [--lire]` : Excel de réconciliation des salaires de l'exercice (`--lire` relit d'abord le classeur de paie).
 
 La fenêtre ([fenetre](fenetre.md)) appelle la même fonction `main` quand on clique sur « Lancer la réconciliation ».
 
@@ -16,7 +17,7 @@ Le dossier de travail mémorisé (ou `--dossier`), puis tout ce que lisent les m
 
 ## Ce qu'il écrit
 
-Les sorties de [sorties](sorties.md) et `sorties/apprentissage.xlsx` ([apprentissage](apprentissage.md)) ; en mode `importer`, celles de [importation.pipeline](importation/pipeline.md).
+Les sorties de [sorties](sorties.md) et `sorties/apprentissage.xlsx` ([apprentissage](apprentissage.md)) ; en mode `importer`, celles de [importation.pipeline](importation/pipeline.md) ; en mode `salaires`, la fiche et l'Excel de [salaires.reconciliation](salaires/reconciliation.md).
 Il écrit aussi le journal des étapes : les lignes `1/5` à `5/5`.
 
 ## Ce qui casse si on le change
@@ -34,7 +35,7 @@ Il écrit aussi le journal des étapes : les lignes `1/5` à `5/5`.
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/__main__.py` (127 lignes)
+- **Fichier :** `src/reconsigliere/__main__.py` (152 lignes)
 - **Dépend de :** [apprentissage](apprentissage.md), [chargement](chargement.md), [config](config.md), [corrections](corrections.md), [exercices](exercices.md), [importation.banc](importation/banc.md), [importation.ia](importation/ia.md), [importation.pipeline](importation/pipeline.md), [installation](installation.md), [pdf_extraction](pdf_extraction.md), [rapprochement](rapprochement.md), [sorties](sorties.md)
 - **Utilisé par :** [fenetre](fenetre.md)
 - **Bibliothèques externes :** aucune

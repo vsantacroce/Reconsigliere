@@ -22,6 +22,8 @@ Rien sur le disque. Il fournit aux autres modules :
 - `SEUIL_REGLE = 3` : corrections identiques de compte avant qu'une règle apprise s'applique seule ([apprentissage](apprentissage.md)) ;
 - `ALIAS_COLONNES` : pour chaque champ (date, montant, débit, crédit, libellé, IBAN, référence, partenaire, fichier, statut),
   les en-têtes de colonnes acceptés ;
+- les chemins des salaires : `DOSSIER_SALAIRES` (`entrees/08_salaires`), `DOSSIER_FICHES_SALAIRES` (`entrees/08_salaires/fiches`),
+  `DOSSIER_SORTIES_SALAIRES` (`sorties/salaires`) ;
 - `CHEMIN_TESSERACT` et `LANGUES_OCR` pour la lecture des images.
 
 ## Ce qui casse si on le change
@@ -42,9 +44,9 @@ Rien sur le disque. Il fournit aux autres modules :
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/config.py` (65 lignes)
+- **Fichier :** `src/reconsigliere/config.py` (69 lignes)
 - **Dépend de :** aucun autre module du programme
-- **Utilisé par :** [__main__](__main__.md), [apprentissage](apprentissage.md), [chargement](chargement.md), [corrections](corrections.md), [fenetre](fenetre.md), [importation.pages](importation/pages.md), [importation.pipeline](importation/pipeline.md), [onglet_apprentissage](onglet_apprentissage.md), [pdf_extraction](pdf_extraction.md), [rapprochement](rapprochement.md), [societe](societe.md), [sorties](sorties.md)
+- **Utilisé par :** [__main__](__main__.md), [apprentissage](apprentissage.md), [chargement](chargement.md), [corrections](corrections.md), [fenetre](fenetre.md), [importation.pages](importation/pages.md), [importation.pipeline](importation/pipeline.md), [onglet_apprentissage](onglet_apprentissage.md), [onglet_salaires](onglet_salaires.md), [pdf_extraction](pdf_extraction.md), [rapprochement](rapprochement.md), [salaires.fiche](salaires/fiche.md), [salaires.lecture_paie](salaires/lecture_paie.md), [salaires.reconciliation](salaires/reconciliation.md), [societe](societe.md), [sorties](sorties.md)
 - **Bibliothèques externes :** aucune
 
 Fonctions et classes publiques :

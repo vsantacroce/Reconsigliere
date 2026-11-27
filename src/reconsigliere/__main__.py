@@ -4,6 +4,7 @@
 - Ligne de commande : python -m reconsigliere [--dossier CHEMIN]
 - Import de documents : python -m reconsigliere importer [FICHIER ...] [--sans-ia] [--modele haiku|sonnet]
 - Banc d'essai IA : python -m reconsigliere banc-ia [--modeles haiku sonnet]
+- Salaires : python -m reconsigliere salaires AAAA [--lire]
 """
 
 from __future__ import annotations
@@ -83,7 +84,7 @@ def main(log: Callable[[str], None] = print) -> dict:
 def _ligne_de_commande(arguments: list[str] | None = None) -> None:
     import sys
     arguments = sys.argv[1:] if arguments is None else arguments
-    commande = arguments[0] if arguments and arguments[0] in ("importer", "banc-ia") else "reconcilier"
+    commande = arguments[0] if arguments and arguments[0] in ("importer", "banc-ia", "salaires") else "reconcilier"
     if commande != "reconcilier":
         arguments = arguments[1:]
     parser = argparse.ArgumentParser(prog=f"reconsigliere {commande}".replace(" reconcilier", ""))
@@ -98,12 +99,19 @@ def _ligne_de_commande(arguments: list[str] | None = None) -> None:
         parser.add_argument("--forcer", action="store_true", help="réimporter les documents déjà importés")
     if commande == "banc-ia":
         parser.add_argument("--modeles", nargs="+", default=["haiku", "sonnet"])
+    if commande == "salaires":
+        parser.add_argument("annee", type=int, help="exercice à réconcilier, par exemple 2025")
+        parser.add_argument("--lire", action="store_true",
+                            help="relire d'abord le classeur de paie de entrees/08_salaires (met la fiche à jour)")
     args = parser.parse_args(arguments)
     dossier = args.dossier or installation.dossier_memorise()
     if dossier:
         config.definir_racine(dossier)
     if commande == "reconcilier":
         main()
+        return
+    if commande == "salaires":
+        _salaires(args.annee, args.lire)
         return
     from .importation import banc, ia, pipeline
     cle = ia.cle_api()
@@ -121,6 +129,23 @@ def _ligne_de_commande(arguments: list[str] | None = None) -> None:
     else:
         resultats = pipeline.importer_dossier(config.RACINE, forcer=args.forcer, **options)
         print(f"{len(resultats)} document(s) importé(s).")
+
+
+def _salaires(annee: int, lire: bool) -> None:
+    from . import salaires
+    installation.creer_dossiers(config.RACINE)
+    try:
+        if lire:
+            b = salaires.lire_classeur(annee)
+            print(f"{b['classeur'].name} lu : {b['ajoutes']} nouveau(x), {b['retires']} retiré(s), "
+                  f"{b['gardees']} correction(s) gardée(s), {b['manuels']} ligne(s) à la main.")
+        chemin, r = salaires.generer(annee)
+    except (salaires.ClasseurAbsent, salaires.FormatInconnu, salaires.FichierOuvert) as e:
+        raise SystemExit(str(e)) from e
+    t = r["total"]
+    print(f"Salaires {annee} : dû {t['du']:.2f}, payé {t['paye']:.2f}, reporté {t['reporte']:.2f}, "
+          f"payé en {annee + 1} {t['paye_suivant']:.2f}, écart {t['ecart']:.2f}, {len(r['points'])} point(s) à vérifier.")
+    print(chemin)
 
 
 if __name__ == "__main__":
