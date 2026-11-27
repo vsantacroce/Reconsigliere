@@ -13,7 +13,7 @@ Il garde aussi les réglages personnels : dossier, clé API, modèle d'IA.
 
 ## Ce qu'il écrit
 
-- Les dossiers `entrees/01_factures` à `entrees/07_documents`, `entrees/06_societe/imports`, `sorties`, et un `LISEZMOI.md`
+- Les dossiers `entrees/01_factures` à `entrees/08_salaires`, `entrees/06_societe/imports`, `entrees/08_salaires/fiches`, `sorties`, et un `LISEZMOI.md`
   dans chacun, sans jamais écraser un fichier existant.
 - `reglages.json` (`ecrire_reglage` change une clé sans effacer les autres).
 
@@ -31,9 +31,9 @@ Il garde aussi les réglages personnels : dossier, clé API, modèle d'IA.
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/installation.py` (148 lignes)
+- **Fichier :** `src/reconsigliere/installation.py` (158 lignes)
 - **Dépend de :** aucun autre module du programme
-- **Utilisé par :** [__main__](__main__.md), [fenetre](fenetre.md), [importation.ia](importation/ia.md), [societe](societe.md)
+- **Utilisé par :** [__main__](__main__.md), [fenetre](fenetre.md), [importation.ia](importation/ia.md), [onglet_salaires](onglet_salaires.md), [societe](societe.md)
 - **Bibliothèques externes :** aucune
 
 Fonctions et classes publiques :

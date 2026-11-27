@@ -346,5 +346,19 @@ class TestReconciliation(AvecDossier):
             salaires.generer(2025)
 
 
+class TestCommande(AvecDossier):
+    def test_commande_salaires(self):
+        from reconsigliere import __main__ as principal
+        paie_fictive.creer_classeur_paie(config.DOSSIER_SALAIRES / "paie.xlsx")
+        with mock.patch("builtins.print"):
+            principal._ligne_de_commande(["salaires", "2025", "--lire", "--dossier", str(self.racine)])
+        self.assertTrue(reconciliation.chemin_sortie(2025).exists())
+
+    def test_commande_sans_classeur(self):
+        from reconsigliere import __main__ as principal
+        with self.assertRaises(SystemExit):
+            principal._ligne_de_commande(["salaires", "2025", "--dossier", str(self.racine)])
+
+
 if __name__ == "__main__":
     unittest.main()

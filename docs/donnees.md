@@ -18,6 +18,8 @@ Aucun de ces fichiers n'est dans le dépôt GitHub : `.gitignore` exclut `entree
 | `entrees/06_societe/exercices/AAAA/referentiel.xlsx` | Référentiel de l'exercice | [exercices](modules/exercices.md) seulement | [exercices](modules/exercices.md) |
 | `entrees/06_societe/exercices/AAAA/etat.json` | Statut, empreinte, historique | [exercices](modules/exercices.md) seulement | [exercices](modules/exercices.md) |
 | `entrees/07_documents/` | Documents à importer (PDF, photo, Excel) | toi | [importation.pipeline](modules/importation/pipeline.md) |
+| `entrees/08_salaires/*.xlsx` | Classeur de paie au format 2025 : onglets `EMPLOYES` (noms en colonne B dès la ligne 7), `ANNEE` (exercice en B1, colonnes `Net définitif` et `Versé selon PAYE` en ligne 5), `PAYé` (lignes V1–V3, PAYE FRAIS, PAYE HP par mois), `Bank Transactions AAAA` (colonnes `Date`, `Employé`, `Type`, `Montant (CHF)`, `Libellé`, `Banque`, `Écriture comptable`, `Rapprochement fiche`) | toi | [salaires.lecture_paie](modules/salaires/lecture_paie.md) |
+| `entrees/08_salaires/fiches/fiche_salaires_AAAA.xlsx` | Fiche de l'exercice : feuilles `du` (`employe`, `net_du`, `source`, `remarque`), `virements` (`id`, `employe`, `date`, `banque`, `montant`, `exercice`, `part_salaire`, `type`, `libelle`, `piece`, `imputation`, `controle`, `preuve`), `points` (`employe`, `point`), `auto` cachée (valeurs calculées, pour reconnaître tes corrections) | [salaires.fiche](modules/salaires/fiche.md), puis toi (`exercice`, `part_salaire`, `imputation`, `preuve`, lignes ajoutées) | [salaires.fiche](modules/salaires/fiche.md) |
 
 ## Sorties
 
@@ -30,6 +32,7 @@ Aucun de ces fichiers n'est dans le dépôt GitHub : `.gitignore` exclut `entree
 | `sorties/a_comptabiliser/` | Pièces « À comptabiliser » et « À confirmer » (vidé à chaque lancement) | [sorties](modules/sorties.md) |
 | `sorties/societe.html` | Tableau de bord de la société (gabarit `modele_societe.html`) | [societe](modules/societe.md) |
 | `sorties/imports/<document>.html` | Relecture d'un document importé | [importation.sorties](modules/importation/sorties.md) |
+| `sorties/salaires/Reconciliation_salaires_AAAA.xlsx` | Feuilles `Synthèse` (formules SOMME.SI.ENS), `Dû AAAA`, `Reste AAAA−1` (si la fiche précédente existe), `Payé en AAAA`, `Payé en AAAA+1`, `Points à vérifier` | [salaires.reconciliation](modules/salaires/reconciliation.md) |
 | `sorties/imports/index.json` | Documents déjà importés (empreinte → classeur) | [importation.pipeline](modules/importation/pipeline.md) |
 
 ## Hors du dossier de travail

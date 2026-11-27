@@ -2,13 +2,15 @@
 
 ## À quoi il sert
 
-L'interface que tu utilises sous Windows (tkinter, inclus dans Python ; sous Ubuntu il faut `python3-tk`). Quatre parties :
+L'interface que tu utilises sous Windows (tkinter, inclus dans Python ; sous Ubuntu il faut `python3-tk`). Cinq parties :
 
 - **Réconciliation** : choix du dossier de travail, compteurs de fichiers par dossier, bouton « Lancer la réconciliation »
   avec barre de progression et journal, boutons d'ouverture des résultats.
 - **Documents** : construit par [onglet_documents](onglet_documents.md) ; « Importer les documents », réglages IA, vue d'ensemble
   des fichiers importés et un sous-onglet par type de document. La fenêtre garde la logique d'import (`_importer`, `_reglages_ia`,
   choix manuel du type de page).
+- **Salaires** : construit par [onglet_salaires](onglet_salaires.md), juste après Documents ; exercice, lecture du classeur de paie,
+  synthèse par employé, Générer, Ouvrir, Enregistrer sous….
 - **Assistant société** : sous-onglet « État de la société » (brevets, coûts, projets, revenus, journal, tableau de bord) et
   sous-onglet « Exercices et changements » (construire, voir, valider et verrouiller, rouvrir, demander un changement, écarts, suggestions).
 
@@ -47,8 +49,8 @@ Rien lui-même : chaque bouton appelle un autre module (réconciliation via [__m
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/fenetre.py` (1057 lignes)
-- **Dépend de :** [__main__](__main__.md), [config](config.md), [exercices](exercices.md), [importation.classement](importation/classement.md), [importation.ia](importation/ia.md), [importation.pipeline](importation/pipeline.md), [installation](installation.md), [onglet_apprentissage](onglet_apprentissage.md), [onglet_documents](onglet_documents.md), [societe](societe.md)
+- **Fichier :** `src/reconsigliere/fenetre.py` (1064 lignes)
+- **Dépend de :** [__main__](__main__.md), [config](config.md), [exercices](exercices.md), [importation.classement](importation/classement.md), [importation.ia](importation/ia.md), [importation.pipeline](importation/pipeline.md), [installation](installation.md), [onglet_apprentissage](onglet_apprentissage.md), [onglet_documents](onglet_documents.md), [onglet_salaires](onglet_salaires.md), [societe](societe.md)
 - **Utilisé par :** aucun module (point d'entrée)
 - **Bibliothèques externes :** aucune
 
