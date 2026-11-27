@@ -16,7 +16,11 @@ from unittest import mock  # noqa: E402
 import openpyxl  # noqa: E402
 
 from reconsigliere import config, installation  # noqa: E402
-from reconsigliere.salaires import fiche, lecture_paie  # noqa: E402
+import shutil  # noqa: E402
+import subprocess  # noqa: E402
+
+from reconsigliere import salaires  # noqa: E402
+from reconsigliere.salaires import fiche, lecture_paie, reconciliation  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import paie_fictive  # noqa: E402
@@ -235,6 +239,111 @@ class TestLecture(AvecDossier):
             lecture_paie.lire(chemin)
         self.assertIn("onglet ANNEE introuvable", str(e.exception))
         self.assertIsNone(lecture_paie.exercice_du_classeur(chemin))
+
+
+def fiche_n(annee, du, virements, points=None):
+    f = {"du": [{"employe": e, "net_du": m, "source": "test", "remarque": ""} for e, m in du],
+         "virements": [], "points": points or []}
+    for i, (employe, montant, exercice, part, typ) in enumerate(virements, 1):
+        f["virements"].append({"id": f"{annee}-{i}", "employe": employe, "date": datetime(annee, 1 + i % 12, 5),
+                               "banque": "B", "montant": montant, "exercice": exercice, "part_salaire": part,
+                               "type": typ, "libelle": "", "piece": f"P{i}", "imputation": "", "controle": "",
+                               "preuve": ""})
+    f["auto"] = fiche.valeurs_auto(f)
+    return f
+
+
+class TestReconciliation(AvecDossier):
+    def setUp(self):
+        super().setUp()
+        self.f24 = fiche_n(2024, [("Durand Alice", 500.0), ("Ancien Paul", 300.0)],
+                           [("Durand Alice", 450.0, 2024, 450.0, "Salaire"), ("Ancien Paul", 200.0, 2024, 200.0, "Salaire")])
+        self.f25 = fiche_n(2025, [("Durand Alice", 1000.0)],
+                           [("Durand Alice", 800.0, 2025, 800.0, "Salaire"),
+                            ("Durand Alice", 50.0, 2024, 50.0, "Régularisation 2024"),
+                            ("Durand Alice", 5000.0, 2025, 0.0, "Prêt / avance")])
+        self.f26 = fiche_n(2026, [("Durand Alice", 1200.0)],
+                           [("Durand Alice", 150.0, 2025, 150.0, "Régularisation 2025"),
+                            ("Durand Alice", 900.0, 2026, 900.0, "Salaire")])
+
+    def test_resume_valeurs(self):
+        r = reconciliation.resume(2025, self.f25, self.f24, self.f26)
+        l = r["lignes"][0]
+        self.assertEqual((l["employe"], l["du"], l["paye"], l["reporte"], l["paye_suivant"], l["ecart"]),
+                         ("Durand Alice", 1000.0, 800.0, 200.0, 150.0, 50.0))
+        self.assertEqual(r["total"]["ecart"], 50.0)
+        restes = {x["employe"]: x for x in r["restes_prec"]}
+        self.assertEqual((restes["Durand Alice"]["reporte"], restes["Durand Alice"]["paye"],
+                          restes["Durand Alice"]["ecart"]), (50.0, 50.0, 0.0))
+
+    def test_employe_seulement_en_precedent(self):
+        r = reconciliation.resume(2025, self.f25, self.f24, self.f26)
+        restes = {x["employe"]: x for x in r["restes_prec"]}
+        self.assertEqual((restes["Ancien Paul"]["reporte"], restes["Ancien Paul"]["ecart"]), (100.0, 100.0))
+        chemin = reconciliation.ecrire(2025, self.f25, self.f24, self.f26)
+        valeurs = [c.value for c in openpyxl.load_workbook(chemin)["Synthèse"]["A"]]
+        self.assertIn("Ancien Paul", valeurs)
+
+    def test_synthese_formules(self):
+        chemin = reconciliation.ecrire(2025, self.f25, self.f24, self.f26)
+        self.assertEqual(chemin, config.DOSSIER_SORTIES_SALAIRES / "Reconciliation_salaires_2025.xlsx")
+        wb = openpyxl.load_workbook(chemin)
+        self.assertEqual(wb.sheetnames, ["Synthèse", "Dû 2025", "Reste 2024", "Payé en 2025", "Payé en 2026",
+                                         "Points à vérifier"])
+        ws = wb["Synthèse"]
+        self.assertEqual(ws["A5"].value, "Durand Alice")
+        for c in "BCDEF":
+            self.assertTrue(str(ws[f"{c}5"].value).startswith("="), c)
+        points = " ".join(str(c.value) for c in wb["Points à vérifier"]["B"] if c.value)
+        self.assertIn("Prêt", points)
+
+    def test_sans_precedent(self):
+        chemin = reconciliation.ecrire(2025, self.f25, None, self.f26)
+        wb = openpyxl.load_workbook(chemin)
+        self.assertNotIn("Reste 2024", wb.sheetnames)
+        self.assertNotIn("Restes 2024 payés en 2025", [c.value for c in wb["Synthèse"]["A"]])
+        self.assertIsNone(reconciliation.resume(2025, self.f25, None, None)["restes_prec"])
+
+    def test_sans_suivant(self):
+        chemin = reconciliation.ecrire(2025, self.f25, self.f24, None)
+        wb = openpyxl.load_workbook(chemin)
+        ws = wb["Payé en 2026"]
+        self.assertIsNone(ws["A5"].value)
+        points = " ".join(str(c.value) for c in wb["Points à vérifier"]["B"] if c.value)
+        self.assertIn("Aucune fiche 2026", points)
+
+    def test_points_de_la_fiche_repris(self):
+        self.f25["points"] = [{"employe": "Durand Alice", "point": "Point écrit à la main"}]
+        wb = openpyxl.load_workbook(reconciliation.ecrire(2025, self.f25, None, None))
+        self.assertIn("Point écrit à la main", [c.value for c in wb["Points à vérifier"]["B"]])
+
+    @unittest.skipUnless(shutil.which("soffice"), "LibreOffice absent")
+    def test_recalcul_libreoffice(self):
+        chemin = reconciliation.ecrire(2025, self.f25, self.f24, self.f26)
+        sortie = self.racine / "calc"
+        subprocess.run(["soffice", "--headless", "--convert-to", "xlsx", "--outdir", str(sortie), str(chemin)],
+                       check=True, capture_output=True, timeout=120)
+        ws = openpyxl.load_workbook(sortie / chemin.name, data_only=True)["Synthèse"]
+        self.assertEqual([ws[f"{c}5"].value for c in "BCDEF"], [1000, 800, 200, 150, 50])
+        r = reconciliation.resume(2025, self.f25, self.f24, self.f26)
+        ligne_total = next(i for i in range(5, 15) if ws[f"A{i}"].value == "Total")
+        self.assertEqual(ws[f"F{ligne_total}"].value, r["total"]["ecart"])
+
+    def test_generer_bout_en_bout(self):
+        paie_fictive.creer_classeur_paie(config.DOSSIER_SALAIRES / "paie.xlsx")
+        bilan = salaires.lire_classeur(2025)
+        self.assertEqual(bilan["ajoutes"], len(paie_fictive.VIREMENTS))
+        self.assertTrue(fiche.chemin_fiche(2025).exists())
+        chemin, r = salaires.generer(2025)
+        self.assertTrue(chemin.exists())
+        self.assertEqual(r["lignes"][0]["paye"], paie_fictive.verse_paye("Durand Alice"))
+        self.assertEqual(salaires.exercices_disponibles(), [2025])
+
+    def test_lire_classeur_absent(self):
+        with self.assertRaises(salaires.ClasseurAbsent):
+            salaires.lire_classeur(2025)
+        with self.assertRaises(salaires.ClasseurAbsent):
+            salaires.generer(2025)
 
 
 if __name__ == "__main__":
