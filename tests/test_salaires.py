@@ -80,6 +80,19 @@ class TestFiche(AvecDossier):
         wb = openpyxl.load_workbook(fiche.chemin_fiche(2025))
         self.assertEqual(wb["auto"].sheet_state, "hidden")
 
+    def test_bonus_aller_retour_et_garde(self):
+        bonus = [{"employe": "Durand Alice", "brut": 120.0, "part_salariee": 20.0, "net_a_payer": 100.0, "source": "note"}]
+        f = fiche_lue([vir("Durand Alice", 5, 800.0)])
+        f["bonus"] = bonus
+        fiche.ecrire(2025, f)
+        self.assertEqual(fiche.lire(2025)["bonus"], bonus)
+        resultat, _ = fiche.fusionner(fiche.lire(2025), fiche_lue([vir("Durand Alice", 5, 800.0)]))
+        self.assertEqual(resultat["bonus"], bonus)
+
+    def test_fiche_vide(self):
+        v = fiche.vide()
+        self.assertEqual((v["du"], v["virements"], v["bonus"]), ([], [], []))
+
     def test_lire_absente(self):
         self.assertIsNone(fiche.lire(2030))
 
@@ -234,6 +247,11 @@ class TestLecture(AvecDossier):
         self.assertEqual((v["exercice"], v["part_salaire"]), (2024, 286.17))
         self.assertIn("105.32", v["imputation"])
 
+    def test_bonus(self):
+        v = self.virement("Meier Bruno", 1200.00)
+        self.assertEqual((v["exercice"], v["part_salaire"]), (2024, 1200.00))
+        self.assertIn("Bonus", v["imputation"])
+
     def test_salaire_simple(self):
         v = self.virement("Rossi Carla", 9654.80, jour=27)
         self.assertEqual((v["exercice"], v["part_salaire"], v["imputation"]), (2025, 9654.80, ""))
@@ -283,7 +301,10 @@ class TestReconciliation(AvecDossier):
                             ("Durand Alice", 5000.0, 2025, 0.0, "Prêt / avance")])
         self.f26 = fiche_n(2026, [("Durand Alice", 1200.0)],
                            [("Durand Alice", 150.0, 2025, 150.0, "Régularisation 2025"),
-                            ("Durand Alice", 900.0, 2026, 900.0, "Salaire")])
+                            ("Durand Alice", 900.0, 2026, 900.0, "Salaire"),
+                            ("Durand Alice", 70.0, 2025, 70.0, "Bonus 2025")])
+        self.f25["bonus"] = [{"employe": "Durand Alice", "brut": 120.0, "part_salariee": 20.0, "net_a_payer": 100.0,
+                              "source": "note"}]
 
     def test_resume_valeurs(self):
         r = reconciliation.resume(2025, self.f25, self.f24, self.f26)
@@ -354,6 +375,49 @@ class TestReconciliation(AvecDossier):
         ligne = next(c.row for c in ws["A"] if c.value == "Restes 2024 payés en 2025") + 1
         self.assertEqual(ws.cell(ligne, 3).value, "Payé en 2025")
 
+    def test_annee_suivante_restes_et_bonus(self):
+        self.f25["du"].append({"employe": "Ancien Paul", "net_du": 0.0, "source": "", "remarque": "",
+                               "note_classeur": "Note de votre classeur (PAYé, juin) : à payer en 2026"})
+        r = reconciliation.resume(2026, self.f26, self.f25, None, self.f24)
+        restes = {x["employe"]: x for x in r["restes_prec"]}
+        self.assertEqual((restes["Durand Alice"]["reporte"], restes["Durand Alice"]["paye"]), (200.0, 150.0))
+        r2 = {x["employe"]: x for x in r["restes_prec2"]}
+        self.assertEqual((r2["Ancien Paul"]["reste"], r2["Ancien Paul"]["paye"], r2["Ancien Paul"]["ecart"]),
+                         (100.0, 0.0, 100.0))
+        self.assertNotIn("Durand Alice", r2)
+        b = r["bonus_prec"][0]
+        self.assertEqual((b["employe"], b["net_a_payer"], b["paye"], b["ecart"]), ("Durand Alice", 100.0, 70.0, 30.0))
+        textes = " ".join(p["point"] for p in r["points"])
+        self.assertIn("Bonus 2025 : reste à payer 30.00", textes)
+        self.assertIn("Salaire 2024 : reste à payer 100.00 après les paiements de 2026. 2025 : Note de votre classeur", textes)
+
+    def test_annee_sans_fiche_excel(self):
+        chemin = reconciliation.ecrire(2026, fiche.vide(), self.f25, None, self.f24)
+        wb = openpyxl.load_workbook(chemin)
+        self.assertEqual(wb.sheetnames, ["Synthèse", "Dû 2026", "Reste 2024", "Reste 2025", "Bonus 2025", "Payé en 2026",
+                                         "Payé en 2027", "Points à vérifier"])
+        ws = wb["Synthèse"]
+        titres = [c.value for c in ws["A"]]
+        self.assertEqual(ws["A5"].value, "Durand Alice")
+        for t in ("Restes 2024 encore dus, payés en 2026", "Restes 2025 payés en 2026", "Bonus 2025 payés en 2026"):
+            self.assertIn(t, titres)
+        ligne = titres.index("Bonus 2025 payés en 2026") + 3
+        self.assertIn('"Bonus*"', ws.cell(ligne, 3).value)
+        self.assertIn('"<>Bonus*"', ws["C5"].value)
+
+    @unittest.skipUnless(shutil.which("soffice"), "LibreOffice absent")
+    def test_recalcul_bonus_libreoffice(self):
+        chemin = reconciliation.ecrire(2026, self.f26, self.f25, None, self.f24)
+        sortie = self.racine / "calc"
+        subprocess.run(["soffice", "--headless", "--convert-to", "xlsx", "--outdir", str(sortie), str(chemin)],
+                       check=True, capture_output=True, timeout=120)
+        ws = openpyxl.load_workbook(sortie / chemin.name, data_only=True)["Synthèse"]
+        lignes = {(ws.cell(i, 1).value, i) for i in range(1, ws.max_row + 1)}
+        titre = next(i for v, i in lignes if v == "Bonus 2025 payés en 2026")
+        self.assertEqual([ws.cell(titre + 2, c).value for c in (1, 2, 3, 4)], ["Durand Alice", 100, 70, 30])
+        titre = next(i for v, i in lignes if v == "Restes 2025 payés en 2026")
+        self.assertEqual([ws.cell(titre + 2, c).value for c in (2, 3, 4)], [200, 150, 50])
+
     def test_points_de_la_fiche_repris(self):
         self.f25["points"] = [{"employe": "Durand Alice", "point": "Point écrit à la main"}]
         wb = openpyxl.load_workbook(reconciliation.ecrire(2025, self.f25, None, None))
@@ -379,7 +443,10 @@ class TestReconciliation(AvecDossier):
         chemin, r = salaires.generer(2025)
         self.assertTrue(chemin.exists())
         self.assertEqual(r["lignes"][0]["paye"], paie_fictive.verse_paye("Durand Alice"))
-        self.assertEqual(salaires.exercices_disponibles(), [2025])
+        self.assertEqual(salaires.exercices_disponibles(), [2025, 2026])
+        chemin, r = salaires.generer(2026)
+        self.assertEqual(chemin.name, "Reconciliation_salaires_2026.xlsx")
+        self.assertEqual(r["lignes"][0]["du"], 0.0)
 
     def test_lire_classeur_absent(self):
         with self.assertRaises(salaires.ClasseurAbsent):

@@ -19,6 +19,7 @@ COLONNES_DU = ["employe", "net_du", "source", "remarque", "reste_prec_classeur",
 COLONNES_VIREMENTS = ["id", "employe", "date", "banque", "montant", "exercice", "part_salaire", "type", "libelle",
                       "piece", "imputation", "controle", "preuve"]
 COLONNES_POINTS = ["employe", "point"]
+COLONNES_BONUS = ["employe", "brut", "part_salariee", "net_a_payer", "source"]
 CORRIGEABLES = ["exercice", "part_salaire", "imputation"]
 COLONNES_AUTO = ["cle"] + CORRIGEABLES + ["net_du"]
 PREFIXE_DU = "du:"
@@ -26,11 +27,17 @@ PREFIXE_DU = "du:"
 _SAISIE = PatternFill("solid", fgColor="FFF2CC")
 _ENTETE = PatternFill("solid", fgColor="DDE4EE")
 _LARGEURS = {"id": 34, "employe": 30, "date": 12, "libelle": 34, "piece": 32, "imputation": 60, "type": 24,
-             "preuve": 28, "source": 18, "remarque": 50, "reste_prec_classeur": 18, "note_classeur": 60, "point": 90, "controle": 18}
+             "preuve": 28, "source": 18, "remarque": 50, "reste_prec_classeur": 18, "note_classeur": 60, "point": 90, "controle": 18, "net_a_payer": 16,
+             "part_salariee": 16}
 
 
 class FichierOuvert(Exception):
     """Le fichier est ouvert dans Excel : impossible de l'écrire."""
+
+
+def vide() -> dict:
+    """Fiche d'un exercice dont le classeur de paie n'est pas encore là."""
+    return {"du": [], "virements": [], "points": [], "bonus": [], "auto": {}, "vide": True}
 
 
 def chemin_fiche(annee: int) -> Path:
@@ -76,7 +83,7 @@ def fusionner(ancienne: dict | None, nouvelle: dict) -> tuple[dict, dict]:
     """Nouvelle lecture du classeur de paie, en gardant les corrections et les preuves de l'ancienne fiche."""
     bilan = {"ajoutes": 0, "retires": 0, "gardees": 0, "manuels": 0}
     resultat = {"du": [dict(d) for d in nouvelle["du"]], "virements": [dict(v) for v in nouvelle["virements"]],
-                "points": [], "auto": valeurs_auto(nouvelle)}
+                "points": [], "bonus": [], "auto": valeurs_auto(nouvelle)}
     if ancienne is None:
         bilan["ajoutes"] = len(resultat["virements"])
         return resultat, bilan
@@ -107,6 +114,7 @@ def fusionner(ancienne: dict | None, nouvelle: dict) -> tuple[dict, dict]:
             d["net_du"] = a.get("net_du")
             bilan["gardees"] += 1
     resultat["points"] = [dict(p) for p in ancienne.get("points", [])]
+    resultat["bonus"] = [dict(b) for b in ancienne.get("bonus", [])]
     return resultat, bilan
 
 
@@ -138,6 +146,7 @@ def ecrire(annee: int, f: dict) -> Path:
     _feuille(wb, "du", COLONNES_DU, f["du"], saisie=("net_du",))
     _feuille(wb, "virements", COLONNES_VIREMENTS, f["virements"], saisie=("exercice", "part_salaire", "imputation", "preuve"))
     _feuille(wb, "points", COLONNES_POINTS, f.get("points", []))
+    _feuille(wb, "bonus", COLONNES_BONUS, f.get("bonus", []), saisie=tuple(COLONNES_BONUS))
     auto = [{"cle": k, **v} for k, v in f.get("auto", {}).items()]
     _feuille(wb, "auto", COLONNES_AUTO, auto).sheet_state = "hidden"
     try:
@@ -186,6 +195,10 @@ def lire(annee: int) -> dict | None:
     virements = [_normaliser_virement(v) for v in _lignes(wb["virements"]) if v.get("employe")]
     points = [{"employe": str(p.get("employe") or ""), "point": str(p.get("point") or "")}
               for p in _lignes(wb["points"])] if "points" in wb.sheetnames else []
+    bonus = [{"employe": str(b.get("employe") or ""), "brut": _montant(b.get("brut")),
+              "part_salariee": _montant(b.get("part_salariee")), "net_a_payer": _montant(b.get("net_a_payer")),
+              "source": str(b.get("source") or "")}
+             for b in _lignes(wb["bonus"]) if b.get("employe")] if "bonus" in wb.sheetnames else []
     auto = {}
     if "auto" in wb.sheetnames:
         for a in _lignes(wb["auto"]):
@@ -197,4 +210,4 @@ def lire(annee: int) -> dict | None:
                 auto[cle] = {"exercice": int(ex) if ex not in (None, "") else None,
                              "part_salaire": _montant(a.get("part_salaire")),
                              "imputation": "" if a.get("imputation") is None else str(a.get("imputation"))}
-    return {"du": du, "virements": virements, "points": points, "auto": auto}
+    return {"du": du, "virements": virements, "points": points, "bonus": bonus, "auto": auto}

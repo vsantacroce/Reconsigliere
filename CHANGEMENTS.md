@@ -1,5 +1,14 @@
 # Changements
 
+## 0.11.0 — salaires : année suivante et bonus
+
+- Feuille `bonus` dans la fiche d'un exercice : bonus brut, part salariée, net à payer par employé (gardée à la relecture).
+- Un virement dont le type commence par « Bonus » est un bonus : il ne compte que dans le bloc bonus, jamais comme salaire.
+- Excel de l'année N : nouveaux blocs « Restes N−2 encore dus, payés en N » et « Bonus N−1 payés en N », feuilles « Reste N−2 » et « Bonus N−1 ».
+- L'année qui suit la dernière fiche (2026) se génère sans classeur de paie : colonnes à zéro, prêtes pour les virements.
+- Onglet Salaires : cette année est proposée ; le résumé montre le reste N−2 et le bonus restant.
+- 7 tests ajoutés.
+
 ## 0.10.1 — salaires : onglet FRAIS et notes
 
 - Le lecteur du classeur de paie lit l'onglet FRAIS (lignes HP) : le reste de l'année précédente annoncé par ton classeur.

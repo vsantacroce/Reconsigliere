@@ -219,6 +219,11 @@ def _imputer(v: dict, annee: int, ref: dict) -> None:
     extras = ref.get(v["employe"], {"extras": [], "salaires": []})
     v["exercice"], v["part_salaire"], v["imputation"] = annee, montant, ""
 
+    if typ.startswith("bonus"):
+        m = re.search(r"(\d{4})", typ)
+        v["exercice"] = int(m.group(1)) if m else annee - 1
+        v["imputation"] = f"Bonus de l'exercice {v['exercice']}."
+        return
     if typ.startswith("prêt") or typ.startswith("pret"):
         v["part_salaire"], v["imputation"] = 0.0, "Prêt à l'employé : ni salaire ni frais."
         return
@@ -314,7 +319,8 @@ def lire(chemin: Path) -> dict:
     for e in employes:
         if e not in verse:
             continue
-        total = round(sum(v["part_salaire"] for v in virements if v["employe"] == e and v["exercice"] == annee), 2)
+        total = round(sum(v["part_salaire"] for v in virements if v["employe"] == e and v["exercice"] == annee
+                           and not v["type"].lower().startswith("bonus")), 2)
         if not _egal(total, verse[e]):
             controles.append({"employe": e, "point": (
                 f"Virements de salaire {annee} : {total:,.2f} ; votre classeur (Versé selon PAYE) : {verse[e]:,.2f} ; "
@@ -323,4 +329,5 @@ def lire(chemin: Path) -> dict:
         for d in du:
             if d["employe"] == c["employe"]:
                 d["remarque"] = "Contrôle : " + c["point"]
-    return {"annee": annee, "du": du, "virements": virements, "points": [], "controles": controles, "verse_paye": verse}
+    return {"annee": annee, "du": du, "virements": virements, "points": [], "bonus": [], "controles": controles,
+            "verse_paye": verse}

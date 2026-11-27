@@ -153,14 +153,14 @@ flowchart LR
 | [installation](modules/installation.md) | `src/reconsigliere/installation.py` | 158 | __main__, fenetre, importation.ia, onglet_salaires, societe |
 | [onglet_apprentissage](modules/onglet_apprentissage.md) | `src/reconsigliere/onglet_apprentissage.py` | 208 | fenetre |
 | [onglet_documents](modules/onglet_documents.md) | `src/reconsigliere/onglet_documents.py` | 234 | fenetre |
-| [onglet_salaires](modules/onglet_salaires.md) | `src/reconsigliere/onglet_salaires.py` | 221 | fenetre |
+| [onglet_salaires](modules/onglet_salaires.md) | `src/reconsigliere/onglet_salaires.py` | 224 | fenetre |
 | [onglets_societe](modules/onglets_societe.md) | `src/reconsigliere/onglets_societe.py` | 194 | fenetre |
 | [outils](modules/outils.md) | `src/reconsigliere/outils.py` | 79 | apprentissage, chargement, corrections, importation.catalogue, importation.classement, importation.continuite, importation.extracteurs, importation.ia, importation.pages, importation.pipeline, importation.sorties, pdf_extraction, rapprochement, sorties |
 | [pdf_extraction](modules/pdf_extraction.md) | `src/reconsigliere/pdf_extraction.py` | 104 | __main__, importation.pages |
 | [rapprochement](modules/rapprochement.md) | `src/reconsigliere/rapprochement.py` | 159 | __main__, apprentissage, sorties |
-| [salaires.fiche](modules/salaires/fiche.md) | `src/reconsigliere/salaires/fiche.py` | 200 | onglet_salaires, salaires.lecture_paie, salaires.reconciliation |
-| [salaires.lecture_paie](modules/salaires/lecture_paie.md) | `src/reconsigliere/salaires/lecture_paie.py` | 326 | — |
-| [salaires.reconciliation](modules/salaires/reconciliation.md) | `src/reconsigliere/salaires/reconciliation.py` | 313 | onglet_salaires |
+| [salaires.fiche](modules/salaires/fiche.md) | `src/reconsigliere/salaires/fiche.py` | 213 | onglet_salaires, salaires.lecture_paie, salaires.reconciliation |
+| [salaires.lecture_paie](modules/salaires/lecture_paie.md) | `src/reconsigliere/salaires/lecture_paie.py` | 333 | — |
+| [salaires.reconciliation](modules/salaires/reconciliation.md) | `src/reconsigliere/salaires/reconciliation.py` | 420 | onglet_salaires |
 | [societe](modules/societe.md) | `src/reconsigliere/societe.py` | 648 | exercices, fenetre, onglets_societe |
 | [sorties](modules/sorties.md) | `src/reconsigliere/sorties.py` | 100 | __main__ |
 | [windows.demarrer](modules/windows/demarrer.md) | `windows/demarrer.pyw` | 196 | — |

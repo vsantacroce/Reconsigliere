@@ -111,19 +111,22 @@ class OngletSalaires:
         if annee is None:
             return
         try:
-            fiche_n = fiche.lire(annee)
-            if fiche_n is None:
+            f = salaires.fiches(annee)
+            if f["n"] is None:
                 self.lbl_resume.configure(text=f"Pas encore de fiche {annee} : clique sur « Lire le classeur de paie ».")
                 return
-            r = reconciliation.resume(annee, fiche_n, fiche.lire(annee - 1), fiche.lire(annee + 1))
+            r = reconciliation.resume(annee, f["n"], f["prec"], f["suiv"], f["prec2"])
         except Exception as e:  # noqa: BLE001 - fiche abîmée ou ouverte : l'onglet reste utilisable
             self.lbl_resume.configure(text=f"Lecture impossible de la fiche {annee} : {e}")
             return
         self.resultat = r
         t = r["total"]
         self.lbl_resume.configure(text=(
-            f"Reste à régler sur {annee} : {_chf(t['ecart'])} CHF · {len(r['points'])} point(s) à vérifier "
-            f"(feuille « Points à vérifier » de l'Excel)"))
+            f"Reste à régler sur {annee} : {_chf(t['ecart'])} CHF"
+            + (f" · reste {annee - 2} : {_chf(sum(x['ecart'] for x in r['restes_prec2']))} CHF" if r["restes_prec2"] else "")
+            + (f" · bonus {annee - 1} : {_chf(sum(x['ecart'] for x in r['bonus_prec']))} CHF" if r["bonus_prec"] else "")
+            + f" · {len(r['points'])} point(s) à vérifier (feuille « Points à vérifier » de l'Excel)"
+            + (f" · classeur de paie {annee} pas encore lu" if f["n"].get("vide") else "")))
         self.cadre_synthese.configure(text=f"Synthèse {annee} (orange : écart à vérifier)")
         for c, titre in (("paye", f"Payé en {annee}"), ("reporte", f"Reporté à {annee + 1}"),
                          ("paye_suivant", f"Payé en {annee + 1}"), ("du", f"Dû {annee}")):

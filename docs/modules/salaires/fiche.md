@@ -10,7 +10,7 @@ La fiche existante de l'exercice (onglets `du`, `virements`, `points`, `auto`).
 
 ## Ce qu'il écrit
 
-La fiche de l'exercice. Dans la feuille `du`, deux colonnes viennent du classeur de paie et sont remplacées à chaque relecture : `reste_prec_classeur` (reste de l'année précédente selon l'onglet FRAIS, vide si l'onglet manque) et `note_classeur` (tes notes « Nom — Note »). Cases jaunes : ce que tu peux corriger (`net_du`, `exercice`, `part_salaire`, `imputation`) et `preuve`.
+La fiche de l'exercice. Feuille `bonus` (à remplir à la main, gardée à chaque relecture) : `employe`, `brut`, `part_salariee`, `net_a_payer`, `source` ; c'est le bonus de cet exercice, payé l'année suivante. Dans la feuille `du`, deux colonnes viennent du classeur de paie et sont remplacées à chaque relecture : `reste_prec_classeur` (reste de l'année précédente selon l'onglet FRAIS, vide si l'onglet manque) et `note_classeur` (tes notes « Nom — Note »). Cases jaunes : ce que tu peux corriger (`net_du`, `exercice`, `part_salaire`, `imputation`) et `preuve`.
 
 ## Ce qui casse si on le change
 
@@ -24,7 +24,7 @@ La fiche de l'exercice. Dans la feuille `du`, deux colonnes viennent du classeur
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/salaires/fiche.py` (200 lignes)
+- **Fichier :** `src/reconsigliere/salaires/fiche.py` (213 lignes)
 - **Dépend de :** [config](../config.md)
 - **Utilisé par :** [onglet_salaires](../onglet_salaires.md), [salaires.lecture_paie](lecture_paie.md), [salaires.reconciliation](reconciliation.md)
 - **Bibliothèques externes :** openpyxl
@@ -32,6 +32,7 @@ _Partie générée par `python outils/docs.py` à partir du code : ne pas la mod
 Fonctions et classes publiques :
 
 - `FichierOuvert` : Le fichier est ouvert dans Excel : impossible de l'écrire.
+- `vide` : Fiche d'un exercice dont le classeur de paie n'est pas encore là.
 - `chemin_fiche`
 - `identifiants` : Donne à chaque virement un identifiant stable : AAAAMMJJ-employé-montant-rang.
 - `valeurs_auto` : Valeurs proposées par le lecteur, par identifiant de virement et par employé (net dû).
