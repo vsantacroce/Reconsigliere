@@ -30,10 +30,10 @@ class OngletSalaires:
         self.f = fenetre
         self.resultat: dict | None = None
 
-        s1 = fenetre._section(parent, "1. Exercice et classeur de paie")
+        s1 = fenetre._section(parent, "1. Année et classeur de paie")
         ligne = ttk.Frame(s1)
         ligne.pack(fill="x")
-        ttk.Label(ligne, text="Exercice").pack(side="left")
+        ttk.Label(ligne, text="Année").pack(side="left")
         self.choix = ttk.Combobox(ligne, state="readonly", width=7)
         self.choix.pack(side="left", padx=(6, 12))
         self.choix.bind("<<ComboboxSelected>>", lambda _e: self._afficher())
@@ -56,7 +56,7 @@ class OngletSalaires:
 
         self.lbl_resume = ttk.Label(parent, style="Chemin.TLabel", text="", wraplength=880, justify="left")
         self.lbl_resume.pack(anchor="w", pady=(0, 6))
-        self.cadre_synthese = fenetre._section(parent, "Synthèse de l'exercice", extensible=True)
+        self.cadre_synthese = fenetre._section(parent, "Synthèse de l'année", extensible=True)
         self.arbre = self._tableau(self.cadre_synthese, COLONNES, 11)
         self.cadre_restes = fenetre._section(parent, "Restes de l'année précédente")
         self.arbre_restes = self._tableau(self.cadre_restes, COLONNES_RESTES, 5)
