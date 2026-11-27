@@ -19,7 +19,9 @@ réconciliation (`Proposeur`, `proposer_comptes`). C'est la deuxième façon don
   (`date`, `action`, `liste`, `cle`, `champ`, `avant`, `apres`, `motif`, `saisi_le`).
 - `exercices/AAAA/etat.json` : statut ouvert/validé, date de validation, empreinte SHA-256, historique (construction, validation, réouverture avec motif).
 - À la validation : fichiers en lecture seule, et `exercices/AAAA+1` créé.
-- Sur les transactions : `compte_propose` et `fiabilite_compte`.
+- Sur les transactions : `compte_propose`, `fiabilite_compte` et `compte_reference` (le seul numéro proposé, que
+  [apprentissage](apprentissage.md) compare à tes corrections ; il remplace ensuite la proposition par ta correction ou par une règle apprise).
+- Changements venant de l'onglet Apprentissage (`apprentissage.reporter`) : motif « appris de n corrections ».
 
 ## Ce qui casse si on le change
 
@@ -36,9 +38,9 @@ réconciliation (`Proposeur`, `proposer_comptes`). C'est la deuxième façon don
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/exercices.py` (676 lignes)
+- **Fichier :** `src/reconsigliere/exercices.py` (681 lignes)
 - **Dépend de :** [societe](societe.md)
-- **Utilisé par :** [__main__](__main__.md), [fenetre](fenetre.md)
+- **Utilisé par :** [__main__](__main__.md), [apprentissage](apprentissage.md), [fenetre](fenetre.md), [onglet_apprentissage](onglet_apprentissage.md)
 - **Bibliothèques externes :** openpyxl
 
 Fonctions et classes publiques :

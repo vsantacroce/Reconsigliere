@@ -12,7 +12,8 @@ Les transactions complétées par [rapprochement](rapprochement.md) et [exercice
 ## Ce qu'il écrit
 
 - `sorties/reconciliation.xlsx` : feuilles `reconciliation` (une ligne par transaction : `id_transaction`, `date`, `montant`, `libelle`,
-  `partenaire`, `origine_partenaire`, `statut`, `compte_propose`, `fiabilite_compte`, `pdf_renomme`, `pdf_original`, `score`, `raisons`,
+  `partenaire`, `origine_partenaire`, `statut`, `compte_propose`, `fiabilite_compte`, `origine_compte` (`ta correction`, `appris`,
+  `référentiel`), `pdf_renomme`, `pdf_original`, `score`, `raisons`,
   `explication`, `source`), `pdf_sans_transaction`, `resume`.
 - `sorties/reconciliation.html` : la même chose en page, données insérées à la place de `__DONNEES__`.
 - `sorties/pdf_renommes` : chaque pièce retrouvée, nommée `AAAA-MM-JJ_Partenaire_MontantCHF_Numero`. Le dossier est vidé à chaque lancement.
@@ -31,7 +32,7 @@ Les transactions complétées par [rapprochement](rapprochement.md) et [exercice
 <!-- debut-auto -->
 _Partie générée par `python outils/docs.py` à partir du code : ne pas la modifier à la main._
 
-- **Fichier :** `src/reconsigliere/sorties.py` (99 lignes)
+- **Fichier :** `src/reconsigliere/sorties.py` (100 lignes)
 - **Dépend de :** [config](config.md), [outils](outils.md), [rapprochement](rapprochement.md)
 - **Utilisé par :** [__main__](__main__.md)
 - **Bibliothèques externes :** pandas

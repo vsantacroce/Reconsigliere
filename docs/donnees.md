@@ -11,7 +11,7 @@ Aucun de ces fichiers n'est dans le dépôt GitHub : `.gitignore` exclut `entree
 | `entrees/02_transactions_a_reconcilier/` | Excel ou CSV de la banque : date, montant ou débit/crédit, libellé ; IBAN, référence, partenaire facultatifs | toi | [chargement](modules/chargement.md) |
 | `entrees/03_infos_bancaires/` | Relevés détaillés (mêmes colonnes) | toi | [chargement](modules/chargement.md) |
 | `entrees/04_comptabilite/` | Liste Excel des pièces comptabilisées, PDF dans `pdf/` | toi | [chargement](modules/chargement.md), [pdf_extraction](modules/pdf_extraction.md) |
-| `entrees/05_mes_corrections/mes_corrections.xlsx` | Feuilles `partenaires` et `transactions` | [corrections](modules/corrections.md) (modèle), puis toi | [corrections](modules/corrections.md) |
+| `entrees/05_mes_corrections/mes_corrections.xlsx` | Feuilles `partenaires`, `transactions` (dont la colonne `compte`) et `regles_apprises` (règles apprises annulées) | [corrections](modules/corrections.md) (modèle, annulations), puis toi | [corrections](modules/corrections.md) |
 | `entrees/06_societe/*.xlsx` | Classeur des brevets tel que tenu | toi | [societe](modules/societe.md) |
 | `entrees/06_societe/societe.xlsx` | Onglets `Projets`, `Revenus`, `Journal` | [societe](modules/societe.md) (modèle, journal), toi | [societe](modules/societe.md), [exercices](modules/exercices.md) |
 | `entrees/06_societe/imports/AAAA/*.xlsx` | Classeurs normalisés d'un exercice (format ci-dessous) | [importation.sorties](modules/importation/sorties.md), ou toi | [exercices](modules/exercices.md), [importation.catalogue](modules/importation/catalogue.md) (onglet Documents, seulement les classeurs avec onglets `meta` et `pages`) |
@@ -23,7 +23,8 @@ Aucun de ces fichiers n'est dans le dépôt GitHub : `.gitignore` exclut `entree
 
 | Chemin | Contenu | Écrit par |
 |---|---|---|
-| `sorties/reconciliation.xlsx` | Feuilles `reconciliation`, `pdf_sans_transaction`, `resume` | [sorties](modules/sorties.md) |
+| `sorties/reconciliation.xlsx` | Feuilles `reconciliation` (dont `compte_propose`, `fiabilite_compte`, `origine_compte`), `pdf_sans_transaction`, `resume` | [sorties](modules/sorties.md) |
+| `sorties/apprentissage.xlsx` | Onglets `resume`, `regles`, `alertes`, `corrections` : ce que le programme a appris de tes corrections de compte | [apprentissage](modules/apprentissage.md) ; relu par [onglet_apprentissage](modules/onglet_apprentissage.md) |
 | `sorties/reconciliation.html` | Page interactive (gabarit `modele.html`) | [sorties](modules/sorties.md) |
 | `sorties/pdf_renommes/` | Pièces renommées `AAAA-MM-JJ_Partenaire_MontantCHF_Numero` (vidé à chaque lancement) | [sorties](modules/sorties.md) |
 | `sorties/a_comptabiliser/` | Pièces « À comptabiliser » et « À confirmer » (vidé à chaque lancement) | [sorties](modules/sorties.md) |

@@ -67,6 +67,7 @@ Chemins relatifs au dossier de travail.
 | Fichier | Contenu |
 |---|---|
 | `sorties/reconciliation.xlsx` | Une ligne par transaction, les PDF sans transaction et un résumé |
+| `sorties/apprentissage.xlsx` | Ce que le programme a appris de tes corrections de compte : règles, alertes, corrections prises en compte |
 | `sorties/reconciliation.html` | La même chose en page interactive, avec recherche, filtres et liens vers les PDF |
 | `sorties/societe.html` | Tableau de bord de la société, recréé par le bouton « Tableau de bord » de l'onglet Assistant société |
 | `sorties/pdf_renommes` | Chaque pièce retrouvée, nommée `AAAA-MM-JJ_Partenaire_Montant_Numero` avec son extension d'origine |
@@ -116,9 +117,20 @@ La réconciliation utilise le référentiel de l'exercice de chaque transaction 
 Dans `mes_corrections.xlsx` :
 
 - **Feuille partenaires** : un mot du libellé bancaire et le partenaire à utiliser. Exemple : `SWISSCOM` donne `Swisscom`.
-- **Feuille transactions** : l'`id_transaction` copié depuis la sortie, puis le partenaire, le PDF à lier, une explication ou un statut forcé (`Comptabilise`, `Sans piece`, `A comptabiliser`, `Ignorer`).
+- **Feuille transactions** : l'`id_transaction` copié depuis la sortie, puis le partenaire, le PDF à lier, une explication, un statut forcé (`Comptabilise`, `Sans piece`, `A comptabiliser`, `Ignorer`) ou le bon `compte`.
 
 Tes corrections passent toujours avant le rapprochement automatique.
+
+## Ce que le programme apprend (onglet Apprentissage)
+
+Après 3 corrections identiques du compte d'un même partenaire (par exemple Migros → 6600), le programme applique seul ce compte
+aux transactions suivantes de ce partenaire. Si tes corrections divergent, il cherche ce qui les sépare (date du changement, mot du
+libellé, montant) et en fait une règle conditionnelle ; s'il ne trouve pas, il suspend la règle et te prévient. Il signale aussi un
+référentiel d'exercice qui range le partenaire sur un autre compte, et les autres partenaires rangés sur ce même compte.
+
+Tout est recalculé à chaque réconciliation depuis `mes_corrections.xlsx` : supprimer une correction retire son effet.
+L'onglet Apprentissage montre les règles, leur fiabilité et les alertes, et permet d'annuler une règle ou de la reporter dans
+l'exercice ouvert. Le détail est dans `sorties/apprentissage.xlsx` et dans [docs/apprentissage.md](docs/apprentissage.md).
 
 ## Import de documents comptables
 

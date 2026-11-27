@@ -41,6 +41,10 @@ TOLERANCE_JOURS = 15          # écart de date accepté entre facture et paiemen
 SEUIL_SUR = 60                # score à partir duquel le lien est considéré comme sûr
 SEUIL_A_CONFIRMER = 40        # score à partir duquel le lien est proposé
 
+# Apprentissage : nombre de corrections identiques de compte pour un partenaire avant que le programme
+# applique seul ce compte aux transactions suivantes (voir docs/apprentissage.md).
+SEUIL_REGLE = 3
+
 # Noms de colonnes reconnus dans les Excel (en minuscules, sans accents).
 # Ajoute ici les noms utilisés par ta banque ou ta comptabilité.
 ALIAS_COLONNES = {

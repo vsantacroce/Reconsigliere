@@ -18,6 +18,7 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 from datetime import date
 
 from . import __version__, config, exercices, installation, societe
+from . import onglet_apprentissage as onglet_apprentissage_module
 from . import onglet_documents as onglet_documents_module
 
 TITRE = "Reconsigliere"
@@ -92,13 +93,17 @@ class Fenetre:
         onglet_reco = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
         onglet_documents = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
         onglet_assistant = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
+        onglet_apprentissage = ttk.Frame(self.onglets, padding=(0, 10, 0, 0))
         self.onglet_assistant = onglet_assistant
         self.onglets.add(onglet_reco, text="  Réconciliation  ")
         self.onglets.add(onglet_documents, text="  Documents  ")
         self.onglets.add(onglet_assistant, text="  Assistant société  ")
+        self.onglets.add(onglet_apprentissage, text="  Apprentissage  ")
         self.onglets.bind("<<NotebookTabChanged>>", lambda _e: self._onglet_change())
         self.documents_cadre = onglet_documents
         self.documents = onglet_documents_module.construire(onglet_documents, self)
+        self.apprentissage_cadre = onglet_apprentissage
+        self.apprentissage = onglet_apprentissage_module.construire(onglet_apprentissage, self)
         self.sous_onglets = ttk.Notebook(onglet_assistant)
         self.sous_onglets.pack(fill="both", expand=True)
         onglet_societe = ttk.Frame(self.sous_onglets, padding=(0, 10, 0, 0))
@@ -771,6 +776,8 @@ class Fenetre:
             self._actualiser_assistant()
         elif courant == str(self.documents_cadre):
             self.documents.actualiser()
+        elif courant == str(self.apprentissage_cadre):
+            self.apprentissage.actualiser()
 
     def _terminer_import(self, resultats: list[dict]) -> None:
         self.en_cours = False

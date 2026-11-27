@@ -38,7 +38,7 @@ _Partie générée par `python outils/docs.py` à partir du code : ne pas la mod
 
 - **Fichier :** `src/reconsigliere/rapprochement.py` (159 lignes)
 - **Dépend de :** [config](config.md), [outils](outils.md)
-- **Utilisé par :** [__main__](__main__.md), [sorties](sorties.md)
+- **Utilisé par :** [__main__](__main__.md), [apprentissage](apprentissage.md), [sorties](sorties.md)
 - **Bibliothèques externes :** aucune
 
 Fonctions et classes publiques :

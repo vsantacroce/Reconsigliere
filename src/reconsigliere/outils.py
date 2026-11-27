@@ -67,3 +67,13 @@ def nom_de_fichier_sur(texte: str, longueur_max: int = 40) -> str:
     texte = sans_accents(texte or "")
     texte = re.sub(r"[^A-Za-z0-9.\-]+", "-", texte).strip("-")
     return texte[:longueur_max].strip("-") or "Inconnu"
+
+
+def code_compte(valeur) -> str:
+    """Numéro de compte en texte : 6600.0 (saisi comme nombre dans Excel) devient « 6600 »."""
+    if valeur is None or (isinstance(valeur, float) and pd.isna(valeur)):
+        return ""
+    if isinstance(valeur, float) and valeur.is_integer():
+        valeur = int(valeur)
+    texte = str(valeur).strip()
+    return texte[:-2] if re.fullmatch(r"\d+\.0", texte) else texte

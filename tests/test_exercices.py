@@ -178,6 +178,8 @@ class TestExercices(unittest.TestCase):
         ]
         self.assertEqual(exercices.proposer_comptes(transactions), 3)
         self.assertTrue(transactions[0]["compte_propose"].startswith("6510"))
+        self.assertEqual(transactions[0]["compte_reference"], "6510")
+        self.assertEqual(transactions[3]["compte_reference"], "")
         self.assertIn("référentiel 2024", transactions[0]["fiabilite_compte"])
         self.assertTrue(transactions[1]["compte_propose"].startswith("6570"))
         self.assertEqual(transactions[2]["compte_propose"], "1700 Brevets")

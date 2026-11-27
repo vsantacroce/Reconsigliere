@@ -1,5 +1,19 @@
 # Changements
 
+## 0.8.0 — apprentissage visible
+
+- Nouvelle colonne `compte` dans la feuille transactions de `mes_corrections.xlsx` : corriger le compte d'une transaction.
+- Après 3 corrections identiques pour un partenaire, le programme applique seul ce compte aux transactions suivantes
+  (`SEUIL_REGLE` dans `config.py`). Si les corrections divergent, il cherche le critère qui sépare les comptes (date du changement,
+  mot du libellé, seuil de montant) ; sans critère, la règle est suspendue et une alerte demande de trancher.
+- Alertes : référentiel d'exercice qui range le partenaire sur un autre compte (avec les autres partenaires sur ce même compte),
+  compte absent du plan comptable, correction contraire, « mon analyse se trompait ».
+- Nouvel onglet « Apprentissage » : résumé, règles (condition, état, fiabilité, compte du référentiel), alertes ; boutons
+  Annuler la règle, Rétablir la règle, Reporter dans l'exercice ouvert.
+- Nouvelle sortie `sorties/apprentissage.xlsx` ; nouvelle colonne `origine_compte` dans `sorties/reconciliation.xlsx`.
+- Tout est recalculé à chaque réconciliation ; les annulations sont gardées dans la feuille `regles_apprises`.
+- 25 tests ajoutés (`tests/test_apprentissage.py`).
+
 ## 0.7.0 — onglet Documents
 
 - Nouvel onglet principal « Documents » entre « Réconciliation » et « Assistant société » ; le bouton
