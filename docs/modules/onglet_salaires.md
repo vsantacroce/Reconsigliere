@@ -2,7 +2,7 @@
 
 ## À quoi il sert
 
-L'onglet « Salaires » de la fenêtre : 1. choisir l'exercice, **Lire le classeur de paie** (met la fiche à jour et dit combien de virements sont nouveaux, retirés, et combien de corrections sont gardées), **Ouvrir la fiche**, **Ouvrir le dossier** ; 2. **Générer** l'Excel pour la fiduciaire, **Ouvrir**, **Enregistrer sous…** (copie où tu veux). En dessous : le reste à régler, le nombre de points à vérifier, la synthèse par employé (écarts en orange) et les restes de l'année précédente.
+L'onglet « Salaires » de la fenêtre : 1. choisir l'année, **Lire le classeur de paie** (met la fiche à jour et dit combien de virements sont nouveaux, retirés, et combien de corrections sont gardées), **Ouvrir la fiche**, **Ouvrir le dossier** ; 2. **Générer** l'Excel pour la fiduciaire, **Ouvrir**, **Enregistrer sous…** (copie où tu veux). En dessous : le reste à régler, le nombre de points à vérifier, la synthèse par employé (écarts en orange) et les restes de l'année précédente.
 
 ## Ce qu'il lit
 

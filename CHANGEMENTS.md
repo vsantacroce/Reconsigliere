@@ -2,7 +2,7 @@
 
 ## 0.9.0 — salaires
 
-- Nouvel onglet principal « Salaires », juste après « Documents » : choisir l'exercice, lire le classeur de paie, voir la synthèse
+- Nouvel onglet principal « Salaires », juste après « Documents » : choisir l'année, lire le classeur de paie, voir la synthèse
   par employé (dû, payé dans l'année, reporté, payé l'année suivante, écart) et les restes de l'année précédente ;
   boutons Générer, Ouvrir, Enregistrer sous….
 - Nouveaux dossiers `entrees/08_salaires` (classeur de paie au format 2025) et `entrees/08_salaires/fiches` (une fiche par exercice).
