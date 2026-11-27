@@ -50,6 +50,16 @@ DOSSIERS = [
      "grand livre, plan comptable, annexe, en PDF, photo ou Excel. Un même PDF peut tout contenir.\n"
      "Le bouton « Importer les documents » les classe page par page et écrit un classeur par document\n"
      "dans entrees/06_societe/imports/AAAA (AAAA = exercice) et une page lisible dans sorties/imports.\n"),
+    ("entrees/08_salaires", "Salaires (classeurs de paie)",
+     "Dépose ici ton classeur de paie de l'exercice (forme du classeur 2025 : onglets EMPLOYES, ANNEE, PAYé,\n"
+     "Bank Transactions AAAA). L'exercice est lu dans la cellule B1 de l'onglet ANNEE.\n"
+     "L'onglet Salaires de la fenêtre le lit et écrit une fiche par exercice dans le sous-dossier fiches,\n"
+     "puis l'Excel de réconciliation dans sorties/salaires.\n"),
+    ("entrees/08_salaires/fiches", None,
+     "Une fiche par exercice (fiche_salaires_AAAA.xlsx) : le net dû par employé et chaque virement avec\n"
+     "son exercice et sa part de salaire. Tu peux corriger les colonnes exercice, part_salaire, imputation, net_du\n"
+     "et remplir preuve : tes corrections sont gardées quand le classeur de paie est relu.\n"
+     "Onglet points : tes propres points à vérifier, repris dans l'Excel de réconciliation.\n"),
     ("sorties", "Résultats",
      "Recréé à chaque lancement : reconciliation.xlsx, reconciliation.html, pdf_renommes et a_comptabiliser.\n"
      "societe.html est recréé par le bouton « Tableau de bord » de l'onglet Société.\n"),
