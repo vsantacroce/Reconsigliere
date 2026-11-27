@@ -16,13 +16,15 @@ d'un module qui ne met pas sa page à jour (voir « Comment cette documentation 
 | Savoir pourquoi un choix a été fait | [decisions.md](decisions.md) |
 | Voir ce qui a changé de version en version | [CHANGEMENTS.md](../CHANGEMENTS.md) |
 
-## Les trois parties du programme
+## Les quatre parties du programme
 
 1. **Réconciliation** : relie chaque transaction bancaire à sa pièce (facture, reçu) et dit si elle est déjà en comptabilité.
 2. **Import de documents** : lit un bilan, un compte de résultat, un grand livre, un plan comptable ou une annexe (PDF, photo, Excel)
    et en fait un classeur normalisé.
 3. **Assistant société** : l'état de la société au jour le jour (brevets, projets, revenus, journal) et un référentiel par exercice,
    validé puis verrouillé, qui sert à proposer un compte pour chaque transaction.
+4. **Salaires** : par exercice et par employé, le net dû, payé dans l'année, reporté et payé l'année suivante ;
+   un Excel à formules pour la fiduciaire, avec chaque virement et sa preuve.
 
 ## Le flux des fichiers
 
@@ -36,6 +38,8 @@ flowchart LR
     F05["05_mes_corrections<br/>mes_corrections.xlsx"]
     F06["06_societe<br/>brevets, societe.xlsx"]
     F07["07_documents<br/>bilan, grand livre…"]
+    F08["08_salaires<br/>classeur de paie"]
+    FIC["08_salaires/fiches<br/>fiche par exercice"]
     IMP["06_societe/imports/AAAA<br/>classeurs normalisés"]
     EXE["06_societe/exercices/AAAA<br/>référentiel verrouillé"]
   end
@@ -50,6 +54,12 @@ flowchart LR
 
   subgraph import["Import de documents"]
     PI["importation.pipeline<br/>pages → classement → continuité<br/>→ IA si besoin → extracteurs"]
+  end
+
+  subgraph sal["Salaires"]
+    LP["salaires.lecture_paie"]
+    FI["salaires.fiche"]
+    RS["salaires.reconciliation"]
   end
 
   subgraph assistant["Assistant société"]
@@ -79,6 +89,12 @@ flowchart LR
   SOC --> EX
   IMP --> EX
   EX --> EXE
+
+  F08 --> LP
+  LP --> FI
+  FI --> FIC
+  FIC --> RS
+  RS --> OUT4["sorties/salaires/<br/>Reconciliation_salaires_AAAA.xlsx"]
 ```
 
 La fenêtre ([modules/fenetre.md](modules/fenetre.md)) n'est qu'un tableau de commande : chaque bouton appelle un des modules ci-dessus.

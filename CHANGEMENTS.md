@@ -1,5 +1,17 @@
 # Changements
 
+## 0.9.0 — salaires
+
+- Nouvel onglet principal « Salaires », juste après « Documents » : choisir l'exercice, lire le classeur de paie, voir la synthèse
+  par employé (dû, payé dans l'année, reporté, payé l'année suivante, écart) et les restes de l'année précédente ;
+  boutons Générer, Ouvrir, Enregistrer sous….
+- Nouveaux dossiers `entrees/08_salaires` (classeur de paie au format 2025) et `entrees/08_salaires/fiches` (une fiche par exercice).
+- La fiche garde tes corrections (exercice, part de salaire, imputation, preuve, lignes ajoutées) quand le classeur est relu.
+- Nouvelle sortie `sorties/salaires/Reconciliation_salaires_AAAA.xlsx` : synthèse à formules, feuilles des virements N et N+1,
+  reste N−1, points à vérifier.
+- Nouvelle commande `python -m reconsigliere salaires AAAA [--lire]`.
+- 36 tests ajoutés (`tests/test_salaires.py`).
+
 ## 0.8.0 — apprentissage visible
 
 - Nouvelle colonne `compte` dans la feuille transactions de `mes_corrections.xlsx` : corriger le compte d'une transaction.

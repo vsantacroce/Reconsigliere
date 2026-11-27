@@ -22,10 +22,7 @@ from . import onglet_apprentissage as onglet_apprentissage_module
 from . import onglet_documents as onglet_documents_module
 from . import onglets_societe
 
-try:  # construit par le fil Salaires ; tant qu'il n'existe pas, l'onglet affiche une phrase
-    from . import onglet_salaires as onglet_salaires_module
-except ImportError:
-    onglet_salaires_module = None
+from . import onglet_salaires as onglet_salaires_module
 
 TITRE = "Reconsigliere"
 NB_ETAPES = 5
@@ -138,13 +135,7 @@ class Fenetre:
         onglet_reco = self.cadres["reconciliation"]
         self.documents = onglet_documents_module.construire(self.cadres["documents"], self)
         self.apprentissage = onglet_apprentissage_module.construire(self.cadres["apprentissage"], self)
-        if onglet_salaires_module is not None:
-            self.salaires = onglet_salaires_module.construire(self.cadres["salaires"], self)
-        else:
-            self.salaires = None
-            ttk.Label(self.cadres["salaires"], style="Doux.TLabel", wraplength=900, justify="left",
-                      text="Cette partie est en cours de fabrication : elle arrivera dans une prochaine mise à jour.").pack(
-                anchor="w")
+        self.salaires = onglet_salaires_module.construire(self.cadres["salaires"], self)
         self._construire_societe(self.cadres["brevets"])
         self.projets = onglets_societe.OngletTableau(
             self.cadres["projets"], onglets_societe.COLONNES_PROJETS, onglets_societe.remplir_projets,
@@ -164,7 +155,7 @@ class Fenetre:
         self.actualisations = {
             "documents": lambda: self.documents.actualiser(),
             "apprentissage": lambda: self.apprentissage.actualiser(),
-            "salaires": lambda: getattr(self.salaires, "actualiser", lambda: None)(),
+            "salaires": lambda: self.salaires.actualiser(),
             "brevets": self._actualiser_societe,
             "projets": lambda: self.projets.actualiser(),
             "revenus": lambda: self.revenus.actualiser(),

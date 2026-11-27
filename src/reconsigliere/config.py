@@ -11,6 +11,7 @@ def definir_racine(racine) -> None:
     global RACINE, DOSSIER_FACTURES, DOSSIER_TRANSACTIONS, DOSSIER_INFOS_BANCAIRES
     global DOSSIER_COMPTABILITE, DOSSIER_CORRECTIONS, FICHIER_CORRECTIONS
     global DOSSIER_SORTIES, DOSSIER_PDF_RENOMMES, DOSSIER_A_COMPTABILISER
+    global DOSSIER_SALAIRES, DOSSIER_FICHES_SALAIRES, DOSSIER_SORTIES_SALAIRES
     RACINE = Path(racine).resolve()
     DOSSIER_FACTURES = RACINE / "entrees" / "01_factures"
     DOSSIER_TRANSACTIONS = RACINE / "entrees" / "02_transactions_a_reconcilier"
@@ -21,6 +22,9 @@ def definir_racine(racine) -> None:
     DOSSIER_SORTIES = RACINE / "sorties"
     DOSSIER_PDF_RENOMMES = DOSSIER_SORTIES / "pdf_renommes"
     DOSSIER_A_COMPTABILISER = DOSSIER_SORTIES / "a_comptabiliser"
+    DOSSIER_SALAIRES = RACINE / "entrees" / "08_salaires"
+    DOSSIER_FICHES_SALAIRES = DOSSIER_SALAIRES / "fiches"
+    DOSSIER_SORTIES_SALAIRES = DOSSIER_SORTIES / "salaires"
 
 
 definir_racine(RACINE)
