@@ -21,8 +21,9 @@ d'un module qui ne met pas sa page à jour (voir « Comment cette documentation 
 1. **Réconciliation** : relie chaque transaction bancaire à sa pièce (facture, reçu) et dit si elle est déjà en comptabilité.
 2. **Import de documents** : lit un bilan, un compte de résultat, un grand livre, un plan comptable ou une annexe (PDF, photo, Excel)
    et en fait un classeur normalisé.
-3. **Assistant société** : l'état de la société au jour le jour (brevets, projets, revenus, journal) et un référentiel par exercice,
-   validé puis verrouillé, qui sert à proposer un compte pour chaque transaction.
+3. **Société** (onglets Brevets, Projets, Revenus, Plan comptable, Partenaires, Année comptable) : l'état de la société au jour
+   le jour (brevets, projets, revenus, journal) et un référentiel par année, validé puis verrouillé, qui sert à proposer un compte
+   pour chaque transaction.
 4. **Salaires** : par exercice et par employé, le net dû, payé dans l'année, reporté et payé l'année suivante ;
    un Excel à formules pour la fiduciaire, avec chaque virement et sa preuve.
 
@@ -62,7 +63,7 @@ flowchart LR
     RS["salaires.reconciliation"]
   end
 
-  subgraph assistant["Assistant société"]
+  subgraph assistant["Société (onglets Brevets à Année comptable)"]
     SOC["societe"]
     EX["exercices"]
   end

@@ -14,6 +14,7 @@ import traceback
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, simpledialog, ttk
+from tkinter import font as tkfont
 
 from datetime import date
 
@@ -80,6 +81,9 @@ class Fenetre:
         style.configure("Grand.TButton", font=("Segoe UI", 12, "bold"), padding=(16, 10))
         style.configure("Section.TLabelframe.Label", font=("Segoe UI", 10, "bold"))
         style.configure("Vert.Horizontal.TProgressbar", background="#1f8a4c", troughcolor="#e4e7ec")
+        # Hauteur des lignes de tableau suivant la police : sinon les lignes se chevauchent en affichage agrandi.
+        ligne = tkfont.nametofont("TkDefaultFont").metrics("linespace")
+        style.configure("Treeview", rowheight=max(20, round(ligne * 1.35)))
         style.configure("Explication.TLabel", font=("Segoe UI", 11), foreground="#344054")
         # Carnet sans rangée d'onglets : la barre de boutons (deux lignes) la remplace.
         style.layout("SansOnglets.TNotebook.Tab", [])
@@ -136,7 +140,7 @@ class Fenetre:
         self.documents = onglet_documents_module.construire(self.cadres["documents"], self)
         self.apprentissage = onglet_apprentissage_module.construire(self.cadres["apprentissage"], self)
         self.salaires = onglet_salaires_module.construire(self.cadres["salaires"], self)
-        self._construire_societe(self.cadres["brevets"])
+        self._construire_societe(self._page_defilante(self.cadres["brevets"]))
         self.projets = onglets_societe.OngletTableau(
             self.cadres["projets"], onglets_societe.COLONNES_PROJETS, onglets_societe.remplir_projets,
             boutons=[("Modifier les projets (Excel)", self._ouvrir_classeur_societe)])
@@ -151,7 +155,7 @@ class Fenetre:
             self.cadres["partenaires"], onglets_societe.COLONNES_REFERENTIEL["Partenaires"],
             lambda annee: onglets_societe.lignes_referentiel(annee, "Partenaires"), avec_annee=True,
             boutons=[("Voir les listes de l'année (Excel)", self._voir_referentiel)])
-        self._construire_exercices(self.cadres["annee"])
+        self._construire_exercices(self._page_defilante(self.cadres["annee"]))
         self.actualisations = {
             "documents": lambda: self.documents.actualiser(),
             "apprentissage": lambda: self.apprentissage.actualiser(),
@@ -250,6 +254,11 @@ class Fenetre:
         ttk.Label(principal, text=f"{version} · tes fichiers restent sur cet ordinateur.",
                   style="Doux.TLabel").pack(side="bottom", anchor="e", pady=(6, 0), before=self.barre_onglets)
 
+    @staticmethod
+    def _texte_souple(etiquette: ttk.Label) -> None:
+        """Le texte revient à la ligne selon la largeur réelle, pas selon un nombre de pixels fixe."""
+        etiquette.bind("<Configure>", lambda e: e.widget.configure(wraplength=max(200, e.width - 10)))
+
     def _page_defilante(self, parent) -> ttk.Frame:
         """Cadre qui défile verticalement quand l'écran est trop petit (affichage agrandi de Windows)."""
         fond = ttk.Style(self.tk).lookup("TFrame", "background") or "#dcdad5"
@@ -305,11 +314,13 @@ class Fenetre:
             self.arbre.column(col, width=largeur, anchor=ancre, stretch=(col == "titre"))
         self.arbre.pack(fill="both", expand=True)
         self.lbl_attention = ttk.Label(milieu, text="", wraplength=760, justify="left", foreground="#c2410c")
-        self.lbl_attention.pack(anchor="w", pady=(8, 0))
+        self.lbl_attention.pack(fill="x", anchor="w", pady=(8, 0))
+        self._texte_souple(self.lbl_attention)
 
         bas = self._section(parent, "Mettre à jour")
         self.lbl_societe = ttk.Label(bas, style="Doux.TLabel", wraplength=760, justify="left", text="")
-        self.lbl_societe.pack(anchor="w", pady=(0, 8))
+        self.lbl_societe.pack(fill="x", anchor="w", pady=(0, 8))
+        self._texte_souple(self.lbl_societe)
         boutons = ttk.Frame(bas)
         boutons.pack(anchor="w")
         self.boutons_societe = [
@@ -334,9 +345,11 @@ class Fenetre:
         self.lbl_statut_exercice = ttk.Label(ligne, text="", style="Chemin.TLabel")
         self.lbl_statut_exercice.pack(side="left")
         self.lbl_compteurs_exercice = ttk.Label(haut, text="", style="Doux.TLabel", wraplength=760, justify="left")
-        self.lbl_compteurs_exercice.pack(anchor="w", pady=(6, 0))
+        self.lbl_compteurs_exercice.pack(fill="x", anchor="w", pady=(6, 0))
+        self._texte_souple(self.lbl_compteurs_exercice)
         self.lbl_alerte_exercice = ttk.Label(haut, text="", foreground="#c2410c", wraplength=760, justify="left")
-        self.lbl_alerte_exercice.pack(anchor="w")
+        self.lbl_alerte_exercice.pack(fill="x", anchor="w")
+        self._texte_souple(self.lbl_alerte_exercice)
 
         milieu = self._section(parent, "Modifications demandées pendant l'année", extensible=True)
         colonnes = ("date", "action", "liste", "cle", "champ", "avant", "apres", "motif")

@@ -17,6 +17,7 @@ flowchart LR
   m_onglet_apprentissage["onglet_apprentissage"]
   m_onglet_documents["onglet_documents"]
   m_onglet_salaires["onglet_salaires"]
+  m_onglets_societe["onglets_societe"]
   m_outils["outils"]
   m_pdf_extraction["pdf_extraction"]
   m_rapprochement["rapprochement"]
@@ -72,6 +73,7 @@ flowchart LR
   m_fenetre --> m_onglet_apprentissage
   m_fenetre --> m_onglet_documents
   m_fenetre --> m_onglet_salaires
+  m_fenetre --> m_onglets_societe
   m_fenetre --> m_societe
   m_importation__banc --> m_importation__ia
   m_importation__catalogue --> m_importation__classement
@@ -112,6 +114,8 @@ flowchart LR
   m_onglet_salaires --> m_installation
   m_onglet_salaires --> m_salaires__fiche
   m_onglet_salaires --> m_salaires__reconciliation
+  m_onglets_societe --> m_exercices
+  m_onglets_societe --> m_societe
   m_pdf_extraction --> m_config
   m_pdf_extraction --> m_outils
   m_rapprochement --> m_config
@@ -135,8 +139,8 @@ flowchart LR
 | [chargement](modules/chargement.md) | `src/reconsigliere/chargement.py` | 146 | __main__ |
 | [config](modules/config.md) | `src/reconsigliere/config.py` | 69 | __main__, apprentissage, chargement, corrections, fenetre, importation.pages, importation.pipeline, onglet_apprentissage, onglet_salaires, pdf_extraction, rapprochement, salaires.fiche, salaires.lecture_paie, salaires.reconciliation, societe, sorties |
 | [corrections](modules/corrections.md) | `src/reconsigliere/corrections.py` | 104 | __main__, onglet_apprentissage |
-| [exercices](modules/exercices.md) | `src/reconsigliere/exercices.py` | 681 | __main__, apprentissage, fenetre, onglet_apprentissage |
-| [fenetre](modules/fenetre.md) | `src/reconsigliere/fenetre.py` | 1064 | — |
+| [exercices](modules/exercices.md) | `src/reconsigliere/exercices.py` | 681 | __main__, apprentissage, fenetre, onglet_apprentissage, onglets_societe |
+| [fenetre](modules/fenetre.md) | `src/reconsigliere/fenetre.py` | 1137 | — |
 | [importation.banc](modules/importation/banc.md) | `src/reconsigliere/importation/banc.py` | 67 | __main__ |
 | [importation.catalogue](modules/importation/catalogue.md) | `src/reconsigliere/importation/catalogue.py` | 230 | onglet_documents |
 | [importation.classement](modules/importation/classement.md) | `src/reconsigliere/importation/classement.py` | 107 | fenetre, importation.catalogue, importation.continuite, importation.extracteurs, importation.ia, importation.pipeline, importation.sorties, onglet_documents |
@@ -150,12 +154,13 @@ flowchart LR
 | [onglet_apprentissage](modules/onglet_apprentissage.md) | `src/reconsigliere/onglet_apprentissage.py` | 208 | fenetre |
 | [onglet_documents](modules/onglet_documents.md) | `src/reconsigliere/onglet_documents.py` | 234 | fenetre |
 | [onglet_salaires](modules/onglet_salaires.md) | `src/reconsigliere/onglet_salaires.py` | 219 | fenetre |
+| [onglets_societe](modules/onglets_societe.md) | `src/reconsigliere/onglets_societe.py` | 194 | fenetre |
 | [outils](modules/outils.md) | `src/reconsigliere/outils.py` | 79 | apprentissage, chargement, corrections, importation.catalogue, importation.classement, importation.continuite, importation.extracteurs, importation.ia, importation.pages, importation.pipeline, importation.sorties, pdf_extraction, rapprochement, sorties |
 | [pdf_extraction](modules/pdf_extraction.md) | `src/reconsigliere/pdf_extraction.py` | 104 | __main__, importation.pages |
 | [rapprochement](modules/rapprochement.md) | `src/reconsigliere/rapprochement.py` | 159 | __main__, apprentissage, sorties |
 | [salaires.fiche](modules/salaires/fiche.md) | `src/reconsigliere/salaires/fiche.py` | 198 | onglet_salaires, salaires.lecture_paie, salaires.reconciliation |
 | [salaires.lecture_paie](modules/salaires/lecture_paie.md) | `src/reconsigliere/salaires/lecture_paie.py` | 280 | — |
 | [salaires.reconciliation](modules/salaires/reconciliation.md) | `src/reconsigliere/salaires/reconciliation.py` | 279 | onglet_salaires |
-| [societe](modules/societe.md) | `src/reconsigliere/societe.py` | 648 | exercices, fenetre |
+| [societe](modules/societe.md) | `src/reconsigliere/societe.py` | 648 | exercices, fenetre, onglets_societe |
 | [sorties](modules/sorties.md) | `src/reconsigliere/sorties.py` | 100 | __main__ |
 | [windows.demarrer](modules/windows/demarrer.md) | `windows/demarrer.pyw` | 196 | — |

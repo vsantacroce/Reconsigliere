@@ -37,7 +37,7 @@ _Partie générée par `python outils/docs.py` à partir du code : ne pas la mod
 
 - **Fichier :** `src/reconsigliere/societe.py` (648 lignes)
 - **Dépend de :** [config](config.md), [installation](installation.md)
-- **Utilisé par :** [exercices](exercices.md), [fenetre](fenetre.md)
+- **Utilisé par :** [exercices](exercices.md), [fenetre](fenetre.md), [onglets_societe](onglets_societe.md)
 - **Bibliothèques externes :** openpyxl
 
 Fonctions et classes publiques :
